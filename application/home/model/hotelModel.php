@@ -4,7 +4,7 @@ use think\model;
 
 class hotelModel extends Model
 {
-	protected $table = 'end_hotel';
+	protected $table = 'hotel';
 	protected $resultSetType = 'collection';
 
 //	public function g

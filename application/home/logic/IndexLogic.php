@@ -7,10 +7,12 @@ class IndexLogic
 	{
 //		return 'login';
 		$hotelModel = new model\hotelModel();
-		$data = $hotelModel->field('hotel_id,hotel_name,phone,service_status,address')->where(array('service_status'=>'ok'))->select()->toArray();
-//		$data = $hotelModel->where(array('service_status'=>'ok'))->limit(3000)->select()->toArray();
+
+		$data = $hotelModel->where(array())->limit(3)->select()->toArray();
 echo $hotelModel->getLastSql();
-		dump($data);
+//		dump($data);
+//		echo 1;
+		return $data;
 	}
 
 	public function download($page, $pageSize)
