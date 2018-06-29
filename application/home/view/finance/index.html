@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>添加</title>
+</head>
+<body>
+    <div>
+        <ul>
+            <li>
+                <span>标题</span>
+                <input type="text">
+            </li>
+            <li>
+                <span>消费类型：</span>
+                <select name="" id="">
+                    {volist name='consume_type' id='vo'}
+                    <option value="{$vo.code}">{$vo.name}</option>
+                    {/volist}
+                </select>
+            </li>
+            <li>
+                <span>支付方式：</span>
+                <select name="" id="">
+                    {volist name="pay_method" id="value"}
+                    <option value="{$key}">{$value}</option>
+                    {/volist}
+                </select>
+            </li>
+
+            <li>
+                <span>金额：</span>
+                <input type="text" name="">
+            </li>
+            <li>
+                <span>日期：</span>
+                <input type="text" name="">
+            </li>
+            <li>
+                <span>备注：</span>
+                <input type="text" name="">
+            </li>
+            <li>
+                <span></span>
+                <button>保存</button>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>
