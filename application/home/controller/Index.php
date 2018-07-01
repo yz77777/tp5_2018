@@ -11,11 +11,11 @@ class Index
     }*/
     public function index()
 	{
-//		echo 1;die;
-		$IndexLogic = new logic\IndexLogic();
-		$res = $IndexLogic->login();
+		echo 7777;die;
+		//$IndexLogic = new logic\IndexLogic();
+		//$res = $IndexLogic->login();
 
-		dump($res);
+		
 	}
 
 	public function download_xml()
