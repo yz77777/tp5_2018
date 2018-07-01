@@ -3,7 +3,8 @@ namespace app\home\controller;
 use app\home\logic;
 use think\Loader;
 use think\Debug;
-class Index
+use think\Controller;
+class Index extends Controller
 {
     /*public function index()
     {

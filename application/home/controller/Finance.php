@@ -2,8 +2,8 @@
 namespace app\home\controller;
 use app\home\logic;
 use think\Config;
-use think\controller;
-class Finance extends controller
+use think\Controller;
+class Finance extends Controller
 {
 	public function index()
 	{
