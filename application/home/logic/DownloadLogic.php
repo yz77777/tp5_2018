@@ -47,8 +47,9 @@ class DownloadLogic
 
 		$suffix='.csv';
 
+		// 下载文件临时目录
 		$dirPath = RUNTIME_PATH . 'download/';
-
+//var_dump($dirPath);die;
 		$fileName = '用户列表';
 
 		//指定目录不存在，则创建
@@ -64,8 +65,9 @@ class DownloadLogic
 		$where = array(
 			'mobile'=>''
 		);
-		$memberModel = new model\memberModel();
-		$dataCount = $memberModel->memberCount($where);
+//		$memberModel = new model\memberModel();
+//		$dataCount = $memberModel->memberCount($where);
+		$dataCount = 100;
 		if($dataCount < 1){
 			$res['msg'] = 'data not';
 			return $res;
@@ -114,8 +116,14 @@ class DownloadLogic
 	 * @return int
 	 */
 	private function _csvWriteContent($filePath, $where, $p, $pageSize){
-		$memberModel= new model\memberModel();
-		$dataArr = $memberModel->memberPage($where, $p, $pageSize);
+//		$memberModel= new model\memberModel();
+//		$dataArr = $memberModel->memberPage($where, $p, $pageSize);
+
+		$dataArr = array(
+			array('name'=>'吴','sex'=>'男'),
+			array('name'=>'谢','sex'=>'女'),
+		);
+
 
 		if(empty($dataArr)){
 			return 0;
@@ -282,6 +290,283 @@ class DownloadLogic
 		);
 
 		return $res;
+
+	}
+
+
+	/**
+	 * xls文件下载
+	 * @param $excelFileName    文件名
+	 * @param $tableHeader      array( array('title'=>'姓名','title_code'=>'name','width'=>20), array('title'=>'姓名','title_code'=>'name') ) || array('name'=>'姓名','sex'=>'性别')
+	 * @param $data             array( array('name'=>'吴','sex'=>'男'), array('name'=>'谢','sex'=>'女') )
+	 * @param string $workSheet 工作表名称
+	 * @param int $limitPage    工作表最大条数数据
+	 * @return bool
+	 * @throws \PHPExcel_Exception
+	 * @throws \PHPExcel_Writer_Exception
+	 */
+	public function xlsDownExcel($excelFileName, $tableHeader, $data, $workSheet = null, $limitPage = 10000)
+	{
+//		set_time_limit(0);
+//		ini_set("memory_limit", "1024M");
+
+		vendor("PHPExcel.PHPExcel");
+		$objPHPExcel = new \PHPExcel();
+
+		if (!is_array($data)) {
+			$data = array();
+		}
+		if (!is_array($tableHeader)) {
+			$tableHeader = array();
+		}
+
+		if (empty($workSheet)) {
+			$workSheet = '工作表';
+		}
+
+		$headTitle = $this->handelHead($tableHeader);
+
+		$countPage = ceil(count($data)/$limitPage); // 分多少页
+
+		// 写入第一页数据
+		$objPHPExcel->setActiveSheetIndex(0);
+		$objPHPExcel->getActiveSheet()->setTitle($workSheet .'1');
+		$objPHPExcel = $this->handleTableTitle($objPHPExcel, $headTitle);
+		$objPHPExcel = $this->handleTableData($objPHPExcel, $headTitle, $data, $limitPage);
+
+		// 从第二页数据开始写入
+		for ($i = 2; $i <= $countPage; $i++) {
+			// 设置worksheet名称
+			$objPHPExcelWorksheet = new \PHPExcel_Worksheet($objPHPExcel, $workSheet.$i);
+			$objPHPExcel->addSheet($objPHPExcelWorksheet);
+			// 切换到当前页
+			$objPHPExcel->setActiveSheetIndex($i-1);
+
+			// 生成当前页标题
+			$objPHPExcel = $this->handleTableTitle($objPHPExcel, $headTitle);
+			// 生成当前页数据
+			$objPHPExcel = $this->handleTableData($objPHPExcel, $headTitle, $data, $limitPage);
+		}
+
+		// 销毁data
+		unset($data);
+
+		// 切换到第一页
+		$objPHPExcel->setActiveSheetIndex(0);
+
+		$ondate = date('YmdHis');
+		$filename = "{$excelFileName}_{$ondate}.xlsx";
+		$write = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+		ob_end_clean();//清除缓冲区,避免乱码
+
+		header("Pragma: public");
+		header("Expires: 0");
+		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		header("Content-Type: application/force-download");
+		header("Content-Type: application/download");
+		header('Content-type: application/xlsx');
+		header('Content-Type: application/octet-stream');
+		header('Content-Disposition: attachment; filename='.$filename);
+//	header('Content-Length: '.filesize(''));
+		$write->save('php://output');
+		return true;
+	}
+
+	private function handelHead($tableHeader) {
+		//表头数组
+		$headTitle = array();
+		$k = 'A';
+		foreach ($tableHeader as $key=>$value) {
+			// 判断是一维数组还是二维数组
+			if (is_array($value)) {
+				$headTitle[$k] = array(
+					'title'=>$value['title'],
+					'code'=>$value['title_code'],  // 对应数据key
+					'width'=>isset($value['width'])?$value['width']:'',
+				);
+			} else {
+				$headTitle[$k] = array(
+					'title'=>$value,
+					'code'=>$key, // 对应数据key
+				);
+			}
+
+			$k++;
+		}
+		return $headTitle;
+	}
+
+	/**
+	 * 处理标题
+	 * @param $objPHPExcel
+	 * @param $headTitle
+	 * @return mixed
+	 */
+	private function handleTableTitle($objPHPExcel, $headTitle) {
+		foreach ($headTitle as $key => $value) {
+			$t_key = $key . '1';
+
+			$width = isset($value['width'])?$value['width']:'';
+			if ($width) {
+				$objPHPExcel->getActiveSheet()->getColumnDimension($key)->setWidth($width);
+			}
+
+			$objPHPExcel->getActiveSheet()->getStyle($t_key)->getFont()->setName('宋体')->setSize(14)->setBold(true);
+			$objPHPExcel->getActiveSheet()->setCellValue($t_key, $value['title']);//第一行数据
+
+		}
+		return $objPHPExcel;
+	}
+
+	/**
+	 * 处理数据
+	 * @param $objPHPExcel
+	 * @param $headTitle
+	 * @param $data
+	 * @param $limitPage
+	 * @return mixed
+	 */
+	private function handleTableData($objPHPExcel, $headTitle, &$data, $limitPage) {
+		$w = 2; // 从第二行开始写入数据
+		$mark = 1; // 标记循环次数
+
+		foreach ($data as $key => $val) {
+
+			// 超过当前页最大条数据限制，则跳出循环
+			if ($mark > $limitPage) {
+				break;
+			}
+
+			// 对应标题写入数据
+			foreach ($headTitle as $k => $v) {
+				$code = $v['code'];
+				$objPHPExcel->getActiveSheet()->setCellValue($k . $w, $val[$code]);//第$k列 第$j行
+
+			}
+			$w++;
+
+			// 删除已读取的数据
+			unset($data[$key]);
+
+			$mark++;
+		}
+		return $objPHPExcel;
+	}
+
+	public function csvDownExcel($excelFileName, $tableHeader, $tableData) {
+
+		$suffix='.csv';
+
+		// 下载文件临时目录
+		$dirPath = RUNTIME_PATH . 'download/';
+
+		// 文件名称追加日期
+		$fileName = $excelFileName.'_'.date('md_His').mt_rand(1,100);
+
+		// 文件路径
+		$filePath = $dirPath.$fileName;
+
+		/*$head = array(
+			'member_id'=>'账号ID',
+			'realname'=>'姓名',
+			'nickname'=>'微信昵称',
+			'mobile'=>'手机号',
+			'created_at'=>'注册时间',
+		);
+
+		//过滤编码
+		foreach ($head as $k => $v) {
+			$head[$k] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v);
+		}
+
+		// 生成临时文件
+		$fp = fopen($filePath .'_0'. $suffix, 'w');
+		fputcsv($fp, $head);
+		//每生成一个文件关闭
+		fclose($fp);*/
+
+		$headTitle = $this->handelHead($tableHeader);
+
+		vendor('PHPExcel.PHPExcel');
+		$objPHPExcel = new \PHPExcel();
+
+		$filePath = $dirPath.'aawwrr2.csv';
+
+		if (!is_file($filePath)) {
+//			$objWriterCSV = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'CSV');
+//			$objWriterCSV->save($filePath);
+
+//			$objReader = \PHPExcel_IOFactory::createReader('CSV');
+//			$objReaderFile = $objReader->setInputEncoding('GBK')->load($filePath);
+
+			foreach ($headTitle as $key=>$val) {
+				$objPHPExcel->getSheet()->getCell($key.'1')->setValue($val['title']);
+
+			}
+
+			$objWriterCSV = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'CSV');
+			$objWriterCSV->setUseBOM(true);
+			$objWriterCSV->save($filePath);
+
+		}
+
+
+//unset($filePath);
+
+
+
+
+		die;
+		$objReader = \PHPExcel_IOFactory::createReader('CSV');
+		$objReaderFile = $objReader->setInputEncoding('GBK')->load($filePath);
+
+		$countLimit = $objReaderFile->getSheet()->getHighestRow();
+
+		$objReaderFile->getSheet()->getCell('A1')->setValue('aaaaa');
+//die;
+		$objWriterCSV = \PHPExcel_IOFactory::createWriter($objReaderFile, 'CSV');
+		$objWriterCSV->setUseBOM(true);
+		$objWriterCSV->save($dirPath.'/aa.csv');
+
+			die;
+		// 读取文件
+		// 打开待操作的文件夹句柄
+		$handle1 = opendir($dirPath);
+		// 提取需要合并的文件
+		while(($resVal = readdir($handle1)) !== false){
+
+			if($resVal != '.' && $resVal != '..'){
+
+				$filePath = rtrim($dirPath,'/').'/'.$resVal;
+				// 如果是文件，提出文件内容，写入目标文件
+				if(is_file($filePath)){
+
+					$file_time = date ( "Y-m-d H:i:s", filemtime ( $filePath ) );
+
+					// 删除当前之前下载文件
+					/*if($beforeTime >= $file_time){
+						unlink($filePath);
+						continue;
+					}*/
+
+					// 过滤不需要的文件
+					if(!strstr(basename($filePath), $fileName)){
+						continue;
+					}
+
+					// 获取文件最近修改日期
+					$filetime[] = $file_time;
+
+					// 获取需要合并的文件
+					$filePathArr[] = $filePath;
+
+				}
+
+			}
+
+		}
+		//关闭句柄
+		@closedir ( $handle1 );
 
 	}
 }
