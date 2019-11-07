@@ -14,7 +14,11 @@
 // 定义应用目录
 define('APP_PATH', __DIR__ . '/../application/');
 define('CONF_PATH', __DIR__. '/../application/config/');
-define('BIND_MODULE','home');
+if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+	define('BIND_MODULE','api');
+} else {
+	define('BIND_MODULE','home');
+}
 
 // 加载框架引导文件
 require __DIR__ . '/../thinkphp/start.php';

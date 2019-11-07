@@ -1,0 +1,47 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>{block name="title"}标题{/block}</title>
+	<link rel="stylesheet" href="__CSS__/css-1.min.css?t=1" data-react-helmet=true />
+	<script type="text/javascript" src="__JS__/jquery-1.8.3.min.js"></script>
+	{css href="/static/css/home.css" /}
+	{block name="css"}{/block}
+
+</head>
+<body>
+{block name="top"}
+	<div id="top">
+		<div class="top-main">
+			<div class="top-main-right">
+				<a href="javascript:void(0);">登陆</a>
+				<a href="javascript:void(0);">注册</a>
+			</div>
+		</div>
+	</div>
+{/block}
+{block name="logo"}
+	<div id="logo">
+		<div class="logo-left">
+			LOGIN
+		</div>
+		<div class="logo-right">
+			ADV
+		</div>
+	</div>
+{/block}
+{block name="menu"}
+	<div id="menu">
+		<ul>
+			<li><a href="/">首页</a></li>
+			<li><a href="">JS代码</a></li>
+			<li><a href="">PHP代码</a></li>
+			<li><a href="">MySQL</a></li>
+			<li><a href="">Linux</a></li>
+		</ul>
+	</div>
+{/block}
+{block name="left"}左边分栏{/block}
+{block name="main"}主内容{/block}
+{block name="footer"}底部{/block}
+</body>
+</html>

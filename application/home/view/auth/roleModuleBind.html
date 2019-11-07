@@ -1,0 +1,71 @@
+<!-- Created by PhpStorm. User: 大漠孤颜值 Date: 2019/10/14 Time: 下午4:32 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>绑定角色权限</title>
+	<link rel="stylesheet" href="__CSS__/css-1.min.css?t=1" data-react-helmet=true />
+	<script type="text/javascript" src="__JS__/jquery-1.8.3.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<!-- 引入样式 -->
+	<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+	<!-- 引入组件库 -->
+	<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+
+	<style type="text/css">
+		.content{margin:auto; width: 1024px;}
+		.content ul li{}
+	</style>
+</head>
+<body>
+<div class="content">
+	<el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">全选</el-checkbox>
+	<form action="" method="post">
+		<ul>
+			{volist name="modules.list" id="vo"}
+			<li>
+				<h4>{$vo.name}</h4>
+				<p>
+					<el-checkbox-group v-model="checkList" @change="handleCheckedCitiesChange">
+					{volist name="vo.list" id="vo2"}
+							<el-checkbox v-for="" label="{$vo.code}_{$vo2.code}">{$vo2.name}</el-checkbox>
+					{/volist}
+					</el-checkbox-group>
+				</p>
+			</li>
+			{/volist}
+
+		</ul>
+
+	</form>
+</div>
+
+</body>
+</html>
+
+<script>
+	const authOptions = [];
+	const modulesList = {$modules.list|json_encode};
+	var app = new Vue({
+		el: '.content',
+		data: {
+			checkList: [],
+			checkAll: false,
+			isIndeterminate: true,
+			checkedCount:0,
+		},
+		methods: {
+			handleCheckAllChange(val) {
+				console.log(val);
+				// this.checkList = val ? [] : [];
+				this.isIndeterminate = false;
+			},
+			handleCheckedCitiesChange(value) {
+				// console.log(value.length);
+				let checkedCount = value.length;
+				this.checkAll = checkedCount === this.cities.length;
+				// this.isIndeterminate = checkedCount > 0 && checkedCount < this.cities.length;
+			}
+		}
+	})
+</script>

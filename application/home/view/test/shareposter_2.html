@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<title></title>
+
+	<link href="../../css/mui.min.css" rel="stylesheet" />
+	<link href="../../css/app.css" rel="stylesheet" />
+
+	<style>
+		body {
+			background-color: red;
+		}
+
+		#qrcode {
+			top: 0px;
+			position: fixed;
+			bottom: 0px;
+			width: 100%;
+			height: 100%;
+			min-height: 100%;
+			min-width: 100%;
+			max-height: 100%;
+			max-width: 100%;
+		}
+	</style>
+</head>
+
+<body>
+<img id="qrcode" />
+<!--<img id="qrcode" class="mui-action-back" />-->
+</body>
+<script src="../../js/mui.min.js"></script>
+<script src="../../js/share.js" type="text/javascript" charset="utf-8"></script>
+<script src="../../js/qs.core.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="UTF-8">
+	mui.init({
+		swipeBack: true, //启用右滑关闭功能
+		gestureConfig: {
+			longtap: true,
+			doubletap: true,
+		}
+	});
+	/**
+	 * @description 从远程服务器上下载微信海报到本地
+	 * @param {IDString} url 图片的完整路径
+	 * @param {Object} callback({filename:filename,url:url})
+	 */
+	function downloadImage(url, callback) {
+		//需要先将图片下载到本地，才能分享出去
+		var options = {
+			method: "GET"
+		};
+		var dtask = plus.downloader.createDownload(url, options);
+		dtask.start(); //开始下载任务
+		dtask.addEventListener("statechanged", function(task, status) {
+			if (!dtask) {
+				return;
+			}
+			switch (task.state) {
+				case 1: // 开始
+					console.log('开始下载...');
+					break;
+				case 2: // 已连接到服务器
+					console.log('链接到服务器...');
+					break;
+				case 3: // 已接收到数据
+					console.log('下载数据更新:');
+					console.log(task.downloadedSize + "/" + task.totalSize);
+					break;
+				case 4: // 下载完成
+					console.log('下载完成！');
+					console.log(JSON.stringify(task));
+					var filename = task.filename;
+					filename = plus.io.convertAbsoluteFileSystem(filename.replace("file://", ""));
+					callback({
+						filename: filename,
+						url: task.url
+					});
+					break;
+			}
+		});
+	}
+
+	mui.ready(function() {
+		document.getElementById("qrcode").addEventListener('doubletap', function() {
+			plus.webview.currentWebview().close();
+		});
+		qs.core.ajaxLoadData('user/getTuiGuangHaibao', {
+			uid: qs.app.storage.getUid(),
+			token: qs.app.storage.getToken()
+		}, function(response) {
+			console.log(JSON.stringify(response));
+			var code = response.code;
+			var data = response.data;
+			var callback = function() {
+			};
+			if (code == 4001) {
+				qs.app.toLoginForm();
+			}
+			if (code == 200) {
+				var qrcodeEl = document.getElementById("qrcode");
+				qrcodeEl.setAttribute('src', data.url);
+				//长按弹出菜单
+				var title = '欢迎关注XXX微信公众号！';
+				var content = '所有商品质品保证、售后三包。';
+				qrcodeEl.addEventListener('longtap', function() {
+					downloadImage(data.url, function(task) {
+						var filename = task.filename;
+						var url = task.url;
+						plus.nativeUI.actionSheet({
+							title: '分享到',
+							cancel: "取消",
+							buttons: [{
+								title: "微信消息"
+							}, {
+								title: "微信朋友圈"
+							},
+//                              {
+//                                  title: "更多分享"//功能不好用
+//                              }
+							]
+						}, function(e) {
+							var index = e.index;
+							switch (index) {
+								case 1: //分享到微信好友
+									var message = {
+										//                                          title: title,
+										//                                          content: content,
+										//  href: task.url,
+										//  thumbs: [filename],
+										pictures: [filename], //分享图片,不能设置href和thumbs属性
+									};
+									share.share('weixin', mui.extend(true, {}, message, {
+										extra: {
+											scene: 'WXSceneSession'
+										}
+									}), callback);
+									break;
+								case 2: //分享到微信朋友圈
+									var message = {
+										//                                          title: title,
+										//                                          content: content,
+										//                                          href: task.url,
+										//                                          thumbs: [filename],
+										pictures: [filename], //分享图片,不能设置href和thumbs属性
+									};
+									//message.title = message.content;
+									share.share('weixin', mui.extend(true, {}, message, {
+										extra: {
+											scene: 'WXSceneTimeline'
+										}
+									}), callback);
+									break;
+								case 3: //更多分享
+									var message = {
+										title: title,
+										content: content,
+										href: task.url,
+										thumbs: [filename],
+										pictures: [filename], //分享图片,不能设置href和thumbs属性
+									};
+									share.openSysShare(message, callback);
+									break;
+							}
+						});
+					})
+				});
+			}
+		}, false);
+
+	});
+</script>
+
+</html>

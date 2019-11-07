@@ -1,6 +1,8 @@
 <?php
 namespace app\home\logic;
 use app\home\model;
+use think\Loader;
+
 class DownloadLogic
 {
 	/**
@@ -307,7 +309,7 @@ class DownloadLogic
 	 */
 	public function xlsDownExcel($excelFileName, $tableHeader, $data, $workSheet = null, $limitPage = 10000)
 	{
-//		set_time_limit(0);
+		set_time_limit(0);
 //		ini_set("memory_limit", "1024M");
 
 		vendor("PHPExcel.PHPExcel");
@@ -330,7 +332,7 @@ class DownloadLogic
 
 		// 写入第一页数据
 		$objPHPExcel->setActiveSheetIndex(0);
-		$objPHPExcel->getActiveSheet()->setTitle($workSheet .'1');
+		$objPHPExcel->getActiveSheet()->setTitle($workSheet .'1'); // 工作表名称
 		$objPHPExcel = $this->handleTableTitle($objPHPExcel, $headTitle);
 		$objPHPExcel = $this->handleTableData($objPHPExcel, $headTitle, $data, $limitPage);
 
@@ -434,6 +436,7 @@ class DownloadLogic
 
 			// 超过当前页最大条数据限制，则跳出循环
 			if ($mark > $limitPage) {
+
 				break;
 			}
 
@@ -450,9 +453,17 @@ class DownloadLogic
 
 			$mark++;
 		}
+
 		return $objPHPExcel;
 	}
 
+	/**
+	 * csv Excel文件下载 最多下载100000
+	 * @param $excelFileName
+	 * @param $tableHeader
+	 * @param $tableData
+	 * @return bool
+	 */
 	public function csvDownExcel($excelFileName, $tableHeader, $tableData) {
 
 		$suffix='.csv';
@@ -461,112 +472,315 @@ class DownloadLogic
 		$dirPath = RUNTIME_PATH . 'download/';
 
 		// 文件名称追加日期
-		$fileName = $excelFileName.'_'.date('md_His').mt_rand(1,100);
+		$fileName = $excelFileName.'_'.date('Ymd').str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
 
-		// 文件路径
-		$filePath = $dirPath.$fileName;
+		// 路径 + 文件名 + 后缀
+		$filePathName = $dirPath . $fileName . $suffix;
 
-		/*$head = array(
-			'member_id'=>'账号ID',
-			'realname'=>'姓名',
-			'nickname'=>'微信昵称',
-			'mobile'=>'手机号',
-			'created_at'=>'注册时间',
-		);
+		// 转化想要的格式
+		$headTitle = $this->handelHead($tableHeader);
 
+		$head = array();
 		//过滤编码
-		foreach ($head as $k => $v) {
-			$head[$k] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v);
+		foreach ($headTitle as $v) {
+			$head[] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v['title']);
 		}
 
 		// 生成临时文件
-		$fp = fopen($filePath .'_0'. $suffix, 'w');
+		$fp = fopen($filePathName, 'w');
+
+		// 写入标题
 		fputcsv($fp, $head);
-		//每生成一个文件关闭
-		fclose($fp);*/
 
-		$headTitle = $this->handelHead($tableHeader);
+		// 从第二行开始写入数据
+		$w = 2;
 
-		vendor('PHPExcel.PHPExcel');
-		$objPHPExcel = new \PHPExcel();
+		// 数据遍历
+		foreach ($tableData as $key => $val) {
 
-		$filePath = $dirPath.'aawwrr2.csv';
-
-		if (!is_file($filePath)) {
-//			$objWriterCSV = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'CSV');
-//			$objWriterCSV->save($filePath);
-
-//			$objReader = \PHPExcel_IOFactory::createReader('CSV');
-//			$objReaderFile = $objReader->setInputEncoding('GBK')->load($filePath);
-
-			foreach ($headTitle as $key=>$val) {
-				$objPHPExcel->getSheet()->getCell($key.'1')->setValue($val['title']);
-
-			}
-
-			$objWriterCSV = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'CSV');
-			$objWriterCSV->setUseBOM(true);
-			$objWriterCSV->save($filePath);
-
-		}
-
-
-//unset($filePath);
-
-
-
-
-		die;
-		$objReader = \PHPExcel_IOFactory::createReader('CSV');
-		$objReaderFile = $objReader->setInputEncoding('GBK')->load($filePath);
-
-		$countLimit = $objReaderFile->getSheet()->getHighestRow();
-
-		$objReaderFile->getSheet()->getCell('A1')->setValue('aaaaa');
-//die;
-		$objWriterCSV = \PHPExcel_IOFactory::createWriter($objReaderFile, 'CSV');
-		$objWriterCSV->setUseBOM(true);
-		$objWriterCSV->save($dirPath.'/aa.csv');
-
-			die;
-		// 读取文件
-		// 打开待操作的文件夹句柄
-		$handle1 = opendir($dirPath);
-		// 提取需要合并的文件
-		while(($resVal = readdir($handle1)) !== false){
-
-			if($resVal != '.' && $resVal != '..'){
-
-				$filePath = rtrim($dirPath,'/').'/'.$resVal;
-				// 如果是文件，提出文件内容，写入目标文件
-				if(is_file($filePath)){
-
-					$file_time = date ( "Y-m-d H:i:s", filemtime ( $filePath ) );
-
-					// 删除当前之前下载文件
-					/*if($beforeTime >= $file_time){
-						unlink($filePath);
-						continue;
-					}*/
-
-					// 过滤不需要的文件
-					if(!strstr(basename($filePath), $fileName)){
-						continue;
-					}
-
-					// 获取文件最近修改日期
-					$filetime[] = $file_time;
-
-					// 获取需要合并的文件
-					$filePathArr[] = $filePath;
-
+			// 对应标题写入数据
+			foreach ($headTitle as $k => $v) {
+				$code = $v['code'];
+				$name = $val[$code];
+				if ($name) {
+					$val[$code] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $name);
+				} else {
+					$val[$code] = $name;
 				}
 
 			}
 
-		}
-		//关闭句柄
-		@closedir ( $handle1 );
+			// 写入数据
+			fputcsv($fp, $val);
 
+			$w++;
+
+			// 删除已读取的数据
+			unset($tableData[$key]);
+		}
+
+		// 关闭文件
+		fclose($fp);
+
+		// 下载文件并删除原文件
+		$this->csvDownload($filePathName);
+		return true;
+	}
+
+
+	/**
+	 * csv Excel文件下载 循环下载
+	 * @param $excelFileName
+	 * @param $tableHeader
+	 * @param $tableDataType
+	 * @param $pageSize
+	 * @return bool
+	 */
+	public function csvDownExcelFor($excelFileName, $tableHeader, $tableDataType, $pageSize, $data = array()) {
+
+		$suffix='.csv';
+
+		// 下载文件临时目录
+		$dirPath = RUNTIME_PATH . 'download/';
+
+		// 文件名称追加日期
+		$fileName = $excelFileName.'_'.date('YmdHis').str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
+
+		// 路径 + 文件名 + 后缀
+		$filePathName = $dirPath . $fileName . $suffix;
+
+		// 转化想要的格式
+		$headTitle = $this->handelHead($tableHeader);
+
+		$head = array();
+		//过滤编码
+		foreach ($headTitle as $v) {
+			$head[] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v['title']);
+		}
+
+		// 生成临时文件
+		$fp = fopen($filePathName, 'w');
+
+		// 写入标题
+		fputcsv($fp, $head);
+
+		// 写入数据
+		switch ($tableDataType) {
+			case 'user':
+				$this->writeDataUser($fp, $headTitle, $pageSize);
+
+			default:
+				// 最大数据下载限制
+				/*$count = count($data);
+				$maxCount = 200000;
+				if ($count > $maxCount) {
+					$count = $maxCount;
+				}
+
+				$pageSize = ceil($count / $pageSize);*/
+
+				// 从第二行开始写入数据
+				// 数据遍历
+				foreach ($data as $key => $val) {
+
+					// 对应标题写入数据
+					foreach ($headTitle as $k => $v) {
+						$code = $v['code'];
+						$name = $val[$code];
+						if ($name) {
+							$val[$code] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $name);
+						} else {
+							$val[$code] = $name;
+						}
+
+					}
+
+					// 写入数据
+					fputcsv($fp, $val);
+
+					// 删除已读取的数据
+					unset($data[$key]);
+				}
+				break;
+		}
+
+		// 关闭文件
+		fclose($fp);
+
+		// 下载文件并删除原文件
+		$this->csvDownload($filePathName);
+		return true;
+	}
+
+	/**
+	 * 遍历数据写入csv文件
+	 * @param $fp
+	 * @param $headTitle
+	 * @param $pageLimit
+	 * @return bool
+	 */
+	private function writeDataUser($fp, $headTitle, $pageLimit) {
+		$memberModel = new model\memberModel();
+		$where = array();
+
+		$count = $memberModel->memberCount($where);
+
+		// 最大数据下载限制
+		$maxCount = 200000;
+		if ($count > $maxCount) {
+			$count = $maxCount;
+		}
+
+		$pageSize = ceil($count / $pageLimit);
+
+		// 从第二行开始写入数据
+		$w = 2;
+		for ($i = 1; $i <= $pageSize; $i++) {
+
+			$page = $i;
+			$tableData = $memberModel->memberPage($where, $page, $pageLimit);
+
+			// 数据遍历
+			foreach ($tableData as $key => $val) {
+
+				// 对应标题写入数据
+				foreach ($headTitle as $k => $v) {
+					$code = $v['code'];
+					$name = $val[$code];
+					if ($name) {
+						$val[$code] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $name);
+					} else {
+						$val[$code] = $name;
+					}
+
+				}
+
+				// 写入数据
+				fputcsv($fp, $val);
+
+				$w++;
+
+				// 删除已读取的数据
+				unset($tableData[$key]);
+			}
+		}
+
+		return true;
+
+	}
+
+	/**
+	 * 读取excel
+	 * @param $file
+	 * @return array
+	 * @throws \PHPExcel_Exception
+	 * @throws \PHPExcel_Reader_Exception
+	 */
+	public function readyFile($file) {
+		Loader::import("PHPExcel", EXTEND_PATH."PHPExcel");
+
+		if (!file_exists($file)) {
+			die("文件不存在");
+		}
+
+		$fileInfo = pathinfo($file);
+
+		$extensionArr = array('xlsx');
+		if (!in_array($fileInfo['extension'], $extensionArr)) {
+			die("文件类型不支持");
+		}
+
+		$type = "Excel2007";
+
+		$objReader = \PHPExcel_IOFactory::createReader($type);
+		$objPHPExcel = $objReader->load($file);
+
+		$sheet = $objPHPExcel->getSheet(0);
+
+		// 返回列（字母）
+		$allColumn = $sheet->getHighestColumn();
+		// 返回行（数字）
+		$allRow = $sheet->getHighestRow();
+
+		/*
+		$ColumnNum = \PHPExcel_Cell::columnIndexFromString($allColumn);     // 列号 转 列数
+		for($rowIndex=2;$rowIndex<=$allRow;$rowIndex++){        //循环读取每个单元格的内容。注意行从1开始，列从A开始
+			for($colIndex=0;$colIndex<=$ColumnNum;$colIndex++){
+				$str = (string)$sheet->getCellByColumnAndRow($colIndex, $rowIndex)->getValue();
+				$data[$rowIndex][] = $str;
+			}
+		}*/
+
+		$phpexcel_shared_date = new \PHPExcel_Shared_Date();
+		$data = array();
+
+		for($colIndex=1;$colIndex<=$allRow;$colIndex++){
+			for ($rowIndex = "A"; $rowIndex <= $allColumn; $rowIndex++) {
+				$str = (string)$sheet->getCell($rowIndex.$colIndex)->getValue();
+
+				if ($colIndex > 1 && in_array($rowIndex, array('G'))) {
+					$str = $phpexcel_shared_date->ExcelToPHP($str,true,true);
+				}
+
+				$data[$colIndex][] = $str;
+			}
+		}
+		return $data;
+	}
+
+	/**
+	 * 解析Crm拜访目的
+	 * @throws \PHPExcel_Exception
+	 * @throws \PHPExcel_Reader_Exception
+	 */
+	public function crmHandl() {
+		$file = ROOT_PATH."visit.xlsx";
+
+		$list = $this->readyFile($file);
+
+
+		$headerTitle = array(
+			'visit_id'          => '拜访ID',
+			'hotel_id'          => '酒店ID',
+			'hotel_name'        => '酒店名称',
+			'hotel_star'        => '酒店星级',
+			'office_name'       => '办事处',
+			'visit_mm'          => 'MM',
+			'visit_time'        => '拜访时间',
+			'visit_purpose_1'   => '拜访目的',
+			'visit_purpose_2'   => '拜访目的二级',
+			'visit_state'       => '拜访状态',
+			'visit_content'     => '拜访内容',
+		);
+		$data = array();
+
+		foreach ($list as $key => $value) {
+			if ($key == 1) {
+				continue;
+			}
+
+			// 目的数据处理
+			$zktLogic = new ZKTLogic();
+			$visit_purpose_2 = $zktLogic->getVisitExpectLowerLevel($value[8]);
+			$visit_purpose_1 = $zktLogic->getVisitPurposeOne($value[7]);
+			$visit_state = $zktLogic->active_status_opt($value[9]);
+
+			$data[]=array(
+				'visit_id'          => $value[0],
+				'hotel_id'          => $value[1],
+				'hotel_name'        => $value[2],
+				'hotel_star'        => $value[3],
+				'office_name'       => $value[4],
+				'visit_mm'          => $value[5],
+				'visit_time'        => date('Y-m-d',$value[6]),
+				'visit_purpose_1'   => $visit_purpose_1,
+				'visit_purpose_2'   => $visit_purpose_2,
+				'visit_state'       => $visit_state,
+				'visit_content'     => $value[10],
+			);
+		}
+//		dump($data);
+//		die;
+		$this->csvDownExcelFor("crm-酒店跟进记录", $headerTitle, "",'30',$data);
 	}
 }

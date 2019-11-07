@@ -6,6 +6,7 @@
  * Time: 下午3:27
  */
 namespace app\home\controller;
+use app\home\model\linksModel;
 use think\Controller;
 use think\db;
 
@@ -13,6 +14,13 @@ class ShortLink extends Controller
 {
 	public function index()
 	{
+
+		$linksModel = new linksModel();
+		$a = $linksModel->find()->toArray();
+
+		dump($a);
+		dump($linksModel->getLastSql());
+		die;
 
 //		$info = Db::query('select * from yz_links where id=:id',['id'=>8]);
 		$info = Db::query('select * from yz_links where keyword=:keyword',['keyword'=>'eleqhnaa']);

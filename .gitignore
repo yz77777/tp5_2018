@@ -3,3 +3,4 @@ database.php
 runtime/
 .idea/
 thinkphp/
+application/config/

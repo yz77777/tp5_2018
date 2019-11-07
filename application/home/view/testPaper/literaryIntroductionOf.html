@@ -1,0 +1,81 @@
+<!-- Created by PhpStorm. User: 大漠孤颜值 Date: 2019/1/22 Time: 下午2:18 -->
+{extend name="public/base" /}
+{block name="css"}
+	{css href="/static/css/testPaper.css" /}
+{/block}
+{block name="logo"}{/block}
+{block name="menu"}{/block}
+{block name="left"}{/block}
+
+{block name="main"}
+	<div class="m-content">
+		{if (empty($textPaperInfo))}
+		<h3>该考试卷不存在</h3>
+		{else /}
+		<form action="" enctype="multipart/form-data" method="post">
+			<input type="hidden" name="text_paper_id" value="{$textPaperInfo.text_paper_id}" />
+			<div style="margin-top: 10px; text-align: center;">
+				<span>
+					得分：<b class="color-red" tag="scored"></b>
+				</span>
+				<span style="margin-left: 50px;">
+					<button type="submit" style="padding: 5px 10px;" >
+					交卷
+				</button>
+				</span>
+
+			</div>
+			<div class="frame">
+				<h4>一、选择题</h4>
+				<div class="max-block">
+
+					{volist name="choiceQuestionList" id="data" key="k"}
+					<div class="min-block">
+						<div class="tit"><h5>{$k}. {$data.question_name}</h5></div>
+						<ul>
+							{volist name="data.answer_list" id="vo"}
+							<li>
+								<label>
+									<span class="select"><input type="radio" name="choice_question_{$k}" value="{$vo.answer_id}" /></span>
+
+									{if condition="$show_answer eq 1 && $vo.answer_yes eq 1"}
+										<span class="color-red">{$vo.answer_name}</span>
+
+									{else /}
+										<span>{$vo.answer_name}</span>
+
+									{/if}
+								</label>
+							</li>
+							{/volist}
+
+						</ul>
+					</div>
+					{/volist}
+
+				</div>
+
+			</div>
+
+		</form>
+		{/if}
+	</div>
+	<div id="tpl-list">
+		<div class="tpl-scored default-hide" tag="scored">
+			<div>
+				本次考试得分：<b>0</b>
+			</div>
+			<div>
+				<a href="javascript:void(0);" tag="return_home">返回首页</a>
+			</div>
+		</div>
+		<div class="clearfix mask default-hide" tag="mask"></div>
+	</div>
+
+{/block}
+
+{block name="footer"}
+<script type="text/javascript" src="__JS__/testPaper.js"></script>
+
+{/block}
+

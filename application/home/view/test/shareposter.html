@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>分享海报</title>
+	<script type="text/javascript" src="__JS__/jquery-1.8.3.min.js"></script>
+	<script type="text/javascript" src="__JS__/html2canvas.min.js"></script>
+</head>
+<body>
+
+	<div class="qrcodepic">
+		<img src="http://pic.hsw.cn/0/13/09/09/13090929_929741.jpg" class="qrbg" width="500">
+		<img src="http://fj2.eastday.com/hdqxb2013/20130823_7/node757990/images/02347082.jpg" class="qrcode" width="50" />
+		<span class="niname"><img src="http://pic25.nipic.com/20121210/7447430_215152474000_2.jpg" class="touxiang" width="30" />文字</span>
+		<div class="qrcodemain"></div>
+	</div>
+
+</body>
+</html>
+
+
+<script type="text/javascript">
+
+	/*$(function () {
+		draw(function () {
+			//生成之后的回调
+			// $('img')[0].innerHTML='<img src="'+base64[0]+'">';  //将base生成图片
+		});
+	});*/
+	var data=['http://pic.hsw.cn/0/13/09/09/13090929_929741.jpg','http://fj2.eastday.com/hdqxb2013/20130823_7/node757990/images/02347082.jpg','http://pic25.nipic.com/20121210/7447430_215152474000_2.jpg'];
+	base64=[];//用于保存生成之后的base64
+	function draw(fn) {
+		var img1= new Image;
+		img1.src = data[0];
+		alert(1)
+		img1.onload = function () {
+			//这步必须,因为图片加载是异步的,必须等图片加载完成才开始下面的这些步骤
+			var c = document.createElement('canvas'),
+				ctx = c.getContext('2d');
+			c.width = img1.naturalWidth;
+			c.height = img1.naturalHeight;
+			ctx.rect(0, 0, c.width, c.height);
+			ctx.fillStyle = '#fff';
+			ctx.fill();
+			//生成一张图片1的底图
+
+			/*下面是为底图增加上文字*/
+			ctx.drawImage(img1, 0, 0, c.width, c.height); //(绘制图片资源,x坐标,y坐标,宽,高)
+			//设置字体样式
+			ctx.font = "24px Courier New";
+			//设置字体填充颜色
+			ctx.fillStyle = "write";
+			//从坐标点(92,800)开始绘制文字
+			ctx.fillText("这是文字内容", 92, 800);
+			/*上面是增加文字,可以无限加*/
+
+
+			var img2= new Image;
+			img2.src = data[1];
+			img2.onload = function () {
+				//同理,如果是加载图片的话,需要等图片加载出来再下一步,所以要加onload
+				//(绘制图片资源,x坐标,y坐标,宽,高)
+				ctx.drawImage(img2, 245, 660, 150, 150);
+				//如果绘制完成了,就把base64数据填进数组,然后回调,没完成则继续这步
+				base64.push(c.toDataURL("image/jpeg", 1));
+				fn();//回调
+			};
+		};
+	}
+	///如果是坐标相同,或者觉得代码这样不美观的,可以使用递归方法实现onload的步骤,例如:
+
+	function draw(fn) {
+
+		a(0);
+
+		fn();
+	}
+
+	function a(i){
+		if (i == 0) {
+			var img1= new Image;
+			img1.src = data[0];
+			img1.onload = function () {
+				var c = document.createElement('canvas'),
+					ctx = c.getContext('2d');
+				c.width = img1.naturalWidth;
+				c.height = img1.naturalHeight;
+				ctx.rect(0, 0, c.width, c.height);
+				ctx.fillStyle = '#fff';
+				ctx.fill();
+				//生成一张图片1的底图
+
+				/*下面是为底图增加上文字*/
+				ctx.drawImage(img1, 0, 0, c.width, c.height);//(绘制图片资源,x坐标,y坐标,宽,高)
+				//设置字体样式
+				ctx.font = "24px Courier New";
+				//设置字体填充颜色
+				ctx.fillStyle = "write";
+				//从坐标点(92,800)开始绘制文字
+				ctx.fillText("这是文字内容", 92, 800);
+				/*上面是增加文字,可以无限加*/
+				a(1);//到第2个步骤
+			}
+		} else if (i == 1) {
+			var img2= new Image;
+			img2.src = data[1];
+			img2.onload = function () {
+				var c = document.createElement('canvas'),
+					ctx = c.getContext('2d');
+				//同理,如果是加载图片的话,需要等图片加载出来再下一步,所以要加onload
+				//(绘制图片资源,x坐标,y坐标,宽,高)
+				ctx.drawImage(img2, 245, 660, 150, 150);
+				//如果绘制完成了,就把base64数据填进数组,然后回调,没完成则a(2)到第三步;
+				// base64.push(c.toDataURL("image/jpeg", 1));
+				return;
+			};
+		}
+	}
+
+	$(window).load(function(){
+		var shareContent = $(".qrbg")[0];
+		var width = shareContent.offsetWidth;
+		var height = shareContent.offsetHeight;
+		$(".qrcodepic").height(height);
+		var canvas = document.createElement("canvas");
+		var scale = 2;
+		canvas.width = width * scale;
+		canvas.height = height * scale;
+		canvas.getContext("2d").scale(scale, scale);
+		var rect = shareContent.getBoundingClientRect();
+		canvas.getContext("2d").translate(-rect.left,-rect.top);
+		var opts = {
+			scale: scale,
+			canvas: canvas,
+			width: width,
+			height: height,
+			useCORS:true
+		};
+		html2canvas($(".qrcodepic"), opts).then(function (canvas) {
+			dataURL =canvas.toDataURL("image/png");
+			$(".qrcodemain").html("<img src='"+dataURL+"' style='display:block; width:100%;' />");
+		});
+	});
+
+</script>

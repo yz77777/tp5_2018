@@ -1,0 +1,79 @@
+<!-- Created by PhpStorm. User: 大漠孤颜值 Date: 2019/10/14 Time: 上午11:00 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>权限创建</title>
+	<link rel="stylesheet" href="__CSS__/css-1.min.css?t=1" data-react-helmet=true />
+	<script type="text/javascript" src="__JS__/jquery-1.8.3.min.js"></script>
+</head>
+<body>
+<div>
+	<form action="" method="post">
+		<ul>
+			<li>
+				<span>
+					模板code：
+				</span>
+				<span>
+					<input type="text" name="module_code" >
+				</span>
+			</li>
+			<li>
+				<span>
+					选择权限：
+				</span>
+				<span>
+					<input type="checkbox" name="module_auth[]" value="view"> 查询
+					<input type="checkbox" name="module_auth[]" value="add"> 添加
+					<input type="checkbox" name="module_auth[]" value="update"> 更新
+					<input type="checkbox" name="module_auth[]" value="delete"> 删除
+					<input type="checkbox" name="module_auth[]" value="down"> 下载
+				</span>
+			</li>
+			<li>
+				<span></span>
+				<span><input type="submit" value="下一步"></span>
+			</li>
+			<li>
+				<span></span>
+				<span></span>
+			</li>
+		</ul>
+	</form>
+</div>
+
+</body>
+</html>
+<script type="text/javascript">
+	$(document).ready(function () {
+		$("form").submit(function () {
+			try {
+				console.log($('form').serialize());
+				saveModuleAjax();
+			} catch (e) {
+				console.error(e);
+			}
+			return false;
+		});
+
+		function saveModuleAjax() {
+			var module_code = $('form').find('input[name=module_code]').val();
+			if (module_code == null || module_code.length < 1) {
+				alert("请添加模板code");
+				return false;
+			}
+
+			var param = $('form').serialize();
+
+			$.ajax({
+				type: "POST",
+				url: "/auth/moduleCreate",
+				data: param,
+				success: function(msg){
+					console.log( "Data Saved: " + msg );
+				}
+			});
+		}
+	});
+</script>

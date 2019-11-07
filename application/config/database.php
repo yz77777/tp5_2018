@@ -2,15 +2,20 @@
 return [
 	  'type'            => 'mysql',
     // 服务器地址
+//    'hostname'        => '47.93.137.244',
     'hostname'        => '127.0.0.1',
     // 数据库名
-    'database'        => 'zkt_weekend',
+//    'database'        => 'zkt_weekend',
+    'database'        => 'yz',
     // 用户名
+//    'username'        => 'wuyanzhi',
     'username'        => 'root',
     // 密码
-    'password'        => '',
+//    'password'        => 'JhSwOH7ynVJRGYYr',
+    'password'        => 'root',
     // 端口
-    'hostport'        => '33061',
+//    'hostport'        => '33061',
+    'hostport'        => '3306',
     // 连接dsn
     'dsn'             => '',
     // 数据库连接参数
@@ -18,7 +23,7 @@ return [
     // 数据库编码默认采用utf8
     'charset'         => 'utf8',
     // 数据库表前缀
-    'prefix'          => '',
+    'prefix'          => 'yz_',
     // 数据库调试模式
     'debug'           => true,
     // 数据库部署方式:0 集中式(单一服务器),1 分布式(主从服务器)
@@ -32,11 +37,21 @@ return [
     // 是否严格检查字段是否存在
     'fields_strict'   => true,
     // 数据集返回类型
-    'resultset_type'  => 'array',
+    'resultset_type'  => '\think\Collection',
     // 自动写入时间戳字段
-    'auto_timestamp'  => false,
+    'auto_timestamp'  => 'datetime',
     // 时间字段取出后的默认时间格式
     'datetime_format' => 'Y-m-d H:i:s',
     // 是否需要进行SQL性能分析
     'sql_explain'     => false,
 ];
+
+/*'hostname'        => '140.143.80.167',
+    // 数据库名
+    'database'        => 'links',
+    // 用户名
+    'username'        => 'wyz',
+    // 密码
+    'password'        => 'Ww123456789',
+    // 端口
+    'hostport'        => '3306',*/
