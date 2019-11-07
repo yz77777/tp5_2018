@@ -4,3 +4,4 @@ runtime/
 .idea/
 thinkphp/
 /application/config/
+build.php
