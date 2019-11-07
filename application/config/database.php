@@ -1,6 +1,6 @@
 <?php
 return [
-	  'type'            => 'mysql1',
+	  'type'            => 'mysql',
     // 服务器地址
     'hostname'        => '127.0.0.1',
     // 数据库名
