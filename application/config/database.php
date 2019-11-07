@@ -2,19 +2,14 @@
 return [
 	  'type'            => 'mysql',
     // 服务器地址
-//    'hostname'        => '47.93.137.244',
     'hostname'        => '127.0.0.1',
     // 数据库名
-//    'database'        => 'zkt_weekend',
     'database'        => 'yz',
     // 用户名
-//    'username'        => 'wuyanzhi',
     'username'        => 'root',
     // 密码
-//    'password'        => 'JhSwOH7ynVJRGYYr',
     'password'        => 'root',
     // 端口
-//    'hostport'        => '33061',
     'hostport'        => '3306',
     // 连接dsn
     'dsn'             => '',
@@ -45,13 +40,3 @@ return [
     // 是否需要进行SQL性能分析
     'sql_explain'     => false,
 ];
-
-/*'hostname'        => '140.143.80.167',
-    // 数据库名
-    'database'        => 'links',
-    // 用户名
-    'username'        => 'wyz',
-    // 密码
-    'password'        => 'Ww123456789',
-    // 端口
-    'hostport'        => '3306',*/
