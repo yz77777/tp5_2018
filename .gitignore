@@ -2,3 +2,4 @@ runtime/
 .idea/
 thinkphp/
 build.php
+./application/config/
