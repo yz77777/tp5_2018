@@ -8,7 +8,7 @@
 namespace app\home\controller;
 use app\home\logic;
 
-class testPaper {
+class testPaperController {
 
 	public function index() {
 
