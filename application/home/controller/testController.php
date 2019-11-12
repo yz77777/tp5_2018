@@ -10,7 +10,7 @@ use app\home\logic;
 use think\Loader;
 use think\Debug;
 use think\Controller;
-class Test extends Controller
+class TestController extends Controller
 {
 	public function index(){
 		echo 'hello world';die;
@@ -105,6 +105,11 @@ dump($arrResponse);
     public function autio() {
 
     	return view();
+    }
+
+    public function log() {
+    	$TestLogic = new logic\TestLogic();
+    	$TestLogic->logAdd();
     }
 
 
