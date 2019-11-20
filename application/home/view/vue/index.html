@@ -1,0 +1,116 @@
+<!-- Created by PhpStorm. User: 大漠孤颜值 Date: 2019/11/20 Time: 下午4:08 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Vue学习</title>
+	<!-- 引入vue.js -->
+	<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+	<!-- 引入样式 -->
+	<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+	<!-- 引入组件库 -->
+	<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	<style>
+		.input-div{display: inline-block}
+	</style>
+</head>
+<body>
+<div class="content">
+	<ul>
+		<li>
+			<span>姓名：</span>
+			<div class="input-div">
+				<el-input v-model="name" placeholder="请输入内容"></el-input>
+			</div>
+		</li>
+		<li>
+			<span>年龄：</span>
+			<div class="input-div">
+				<el-input v-model="age" placeholder="请输入年龄" type="number" min="0" max="99"></el-input>
+			</div>
+		</li>
+		<li>
+			<span>密码：</span>
+			<div class="input-div">
+				<el-input v-model="password" placeholder="请输入密码" show-password></el-input>
+			</div>
+		</li>
+		<li>
+			<span>确认密码：</span>
+			<div class="input-div">
+				<el-input v-model="passwordconfirm" placeholder="请输入确认密码" show-password></el-input>
+			</div>
+		</li>
+		<li>
+			<span>备注：</span>
+			<div class="input-div">
+				<el-input v-model="remark" placeholder="请输入备注" type="textarea" :autosize="{minRows: 3, maxRows:10}"></el-input>
+			</div>
+		</li>
+		<li>
+			<span>日期：</span>
+			<div class="input-div">
+				<el-date-picker
+						v-model="dateRange"
+						type="daterange"
+						range-separator="至"
+						start-placeholder="开始日期"
+						end-placeholder="结束日期"
+
+						>
+				</el-date-picker>
+			</div>
+		</li>
+
+		<li>
+			<span>状态：</span>
+			<div class="input-div">
+				<el-select v-model="state" placeholder="请选择">
+					<el-option v-for="item in stateList" :key="item.key" :value="item.value"></el-option>
+				</el-select>
+			</div>
+		</li>
+
+		<li>
+			<span></span>
+			<div class="input-div">
+				<el-button type="primary" @click="onSubmit">立即创建</el-button>
+				<el-button>取消</el-button>
+			</div>
+		</li>
+	</ul>
+</div>
+</body>
+</html>
+
+<script>
+	const app = new Vue({
+		el: '.content',
+		data: {
+			name: '',
+			age: 0,
+			password: '',
+			passwordconfirm: '',
+			remark: '',
+			dateRange: [new Date(), new Date()],
+			state: '',
+			stateList: [{key:'open', value: '开启'}, {key:'close', value: '关闭'}],
+		},
+		methods: {
+			onSubmit(formName) {
+				console.log('submit!', this.data);
+
+				this.$refs[formName].validate((valid) => {
+
+					if (valid) {
+						alert('submit!');
+					} else {
+						console.log('error submit!!');
+						return false;
+					}
+				});
+			}
+		},
+
+	});
+</script>
