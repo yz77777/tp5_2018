@@ -1,0 +1,6 @@
+runtime/
+.idea/
+thinkphp/
+build.php
+LICENSE.txt
+application/config/database.php
