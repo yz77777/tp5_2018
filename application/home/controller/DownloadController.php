@@ -4,30 +4,36 @@ use think\Controller;
 use app\home\logic;
 use think\Loader;
 use think\Debug;
-class Download extends Controller
+class DownloadController extends Controller
 {
 	public function index()
 	{
-		echo '<a href="batch">下载</a>';
+		echo '<a href="csvBatch">csv下载</a>';
+		echo '<a href="xlsBatch">xls下载</a>';
 	}
 
-	public function batch()
+	public function csvBatch()
 	{
-
 		$DownloadLogic = new logic\DownloadLogic();
+		$DownloadLogic->csvDownloadBatch('user', []);
+	}
 
-		$res = $DownloadLogic->csvWrite();
-
-		if($res['status'] == 'success'){
-
-			$data = $res['data'];
-			$file = $data['file_path'];
-			$DownloadLogic->csvDownload($file);
-		}
-
+	public function xlsBatch() {
+		$DownloadLogic = new logic\DownloadLogic();
+		$DownloadLogic->xlsDownloadBatch('user', []);
 	}
 
 	public function xls() {
+		$fileName = "aaa";
+		$headArr = array('user_id'=>'编号', 'user_name'=>'用户名');
+		$dataList = array(
+			array('user_id'=>'1')
+		);
+		$DownloadLogic = new logic\DownloadLogic();
+		$DownloadLogic->xlsDownload($fileName, $headArr, $dataList);
+	}
+
+	/*public function xls() {
 
 		$DownloadLogic = new logic\DownloadLogic();
 
@@ -48,7 +54,7 @@ class Download extends Controller
 
 		$DownloadLogic->xlsDownExcel($title, $headerTitle, $data,'','20');
 		exit;
-	}
+	}*/
 
 	public function csv() {
 
@@ -98,8 +104,17 @@ class Download extends Controller
 	public function readyFile() {
 
 		$DownloadLogic = new logic\DownloadLogic();
-		$file = ROOT_PATH."visit.xlsx";
-		$DownloadLogic->readyFile($file);
+//		$file = ROOT_PATH."visit.xlsx";
+		$file = ROOT_PATH."idlist.xlsx";
+
+		$data = $DownloadLogic->readyFile($file);
+
+		$arr = [];
+		foreach ($data as $vo) {
+			$arr[]=$vo[0];
+		}
+//		dump($arr);
+		dump(implode(',', $arr));
 		die;
 	}
 

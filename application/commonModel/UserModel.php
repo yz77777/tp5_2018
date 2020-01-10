@@ -5,11 +5,13 @@
  * Date: 2019/10/12
  * Time: 下午3:43
  */
-namespace app\commonModel\model;
+namespace app\commonModel;
 use think\Exception;
 use think\model;
 
 class UserModel extends Model {
+
+	protected $table = 'yz_user';
 
 	/**
 	 * 查询用户
@@ -27,5 +29,14 @@ class UserModel extends Model {
 			return array();
 		}
 		return $user->toArray();
+	}
+
+	public function getUserPageCount($where) {
+		return $this->where($where)->count();
+//		return $this->findAdmin(1);
+	}
+
+	public function getUserPageList($where, $page, $pageCount) {
+		return $this->where($where)->page($page, $pageCount)->select()->toArray();
 	}
 }

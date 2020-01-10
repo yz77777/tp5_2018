@@ -1,7 +1,7 @@
 <?php
 namespace app\home\logic;
-use app\home\model;
 use think\Loader;
+use app\commonModel;
 
 class DownloadLogic
 {
@@ -37,241 +37,210 @@ class DownloadLogic
 	}
 
 	/**
-	 * csv数据写入
+	 * 获取毫秒时间戳
+	 * @return float
+	 */
+	private function millisecondTime() {
+		list($msec, $sec) = explode(' ', microtime());
+		$msectime = (float)sprintf('%.0f', (floatval($msec) + floatval($sec)) * 1000);
+		return $msectime;
+	}
+
+	/**
+	 * 下载用户列表
 	 * @return array
 	 */
-	public function csvWrite()
+	private function getUserDownHead() {
+		$headArr = array(
+			'user_id' => '编号',
+			'phone' => '手机号',
+			'user_name' => '用户名',
+			'email' => '邮箱',
+		);
+		return $headArr;
+	}
+
+	/**
+	 * csv文件批量下载方法
+	 * @param $downloadType
+	 * @param $whereArr
+	 */
+	public function csvDownloadBatch($downloadType, $whereArr) {
+
+		$downFile = $this->csvDownWrite($downloadType, $whereArr);
+
+		if(!empty($downFile)){
+
+			$fileInfo = pathinfo($downFile);
+			header('Content-type: application/x-'.$fileInfo['extension']);
+			header('Content-Disposition: attachment; filename='.$fileInfo['basename']);
+			header('Content-Length: '.filesize($downFile));
+			readfile($downFile);
+			// 下载完成后，删除文件
+			unlink($downFile);
+			exit();
+		} else {
+			exit("ERROR");
+		}
+	}
+
+	/**
+	 * 分页查询并批量写入csv文件
+	 * @param $downloadType
+	 * @param $whereArr
+	 * @return string 下载文件地址
+	 */
+	private function csvDownWrite($downloadType, $whereArr)
 	{
 		// 不限请求时间
-//		set_time_limit(0);
+		set_time_limit(0);
 
-		$res = array('status'=>'fail','msg'=>'');
-
+		// 后缀
 		$suffix='.csv';
 
 		// 下载文件临时目录
-		$dirPath = RUNTIME_PATH . 'download/';
-//var_dump($dirPath);die;
-		$fileName = '用户列表';
+		$dirPath = RUNTIME_PATH . 'downloadTemp/';
+
+		//文件名称
+		$fileName = $downloadType.'_'.$this->millisecondTime().mt_rand(1000,9999);
+
+		// 下载文件
+		$downFile = $dirPath.$fileName.$suffix;
 
 		//指定目录不存在，则创建
 		if(!is_dir($dirPath)){
 			mkdir($dirPath);
 			if(!is_dir($dirPath)){
-				$res['msg'] = 'directory does not exist';
-				return $res;
+				exit("directory does not exist");
 			}
+
 		}
 
-		// 获取数据总数
-		$where = array(
-			'mobile'=>''
-		);
-//		$memberModel = new model\memberModel();
-//		$dataCount = $memberModel->memberCount($where);
-		$dataCount = 100;
-		if($dataCount < 1){
-			$res['msg'] = 'data not';
-			return $res;
+		// 每页条数，每次只从数据库取5000条以防变量缓存太大
+		$pageCount = 5000;
+
+		// 数据条数
+		$dataCount = 0;
+
+		// 标题
+		$headArr = array();
+		switch ($downloadType) {
+			case 'user':
+				$UserModel = new commonModel\UserModel();
+				$dataCount = $UserModel->getUserPageCount($whereArr);
+				$headArr = $this->getUserDownHead();
+				break;
 		}
 
-		//文件名称追加日期
-		$fileName = $fileName.'_'.date('md_His').mt_rand(1,100);
+		// 获取总页数
+		$pageSize = ceil($dataCount / $pageCount);
 
-		$filePath = $dirPath.$fileName;
-
-		// 每次只从数据库取2万条以防变量缓存太大
-		$sqlLimit = 1;
-
-		// 每隔$limit行，刷新一下输出buffer，不要太大，也不要太小
-		$limit = 10000;
-
-		// buffer计数器
-		$cnt = 0;
+		// 标题文件
+		$csvFileHead = $dirPath.$fileName . '_0' . $suffix;
 
 		// 生成标题临时文件
-		$this->_csvWriteHead($filePath, $suffix);
+		$this->csvWriteHead($csvFileHead, $headArr);
+
+		// 当前下载所有的临时文件
+		$csvFileArr = [$csvFileHead];
 
 		// 分页获取数据
-		for ($i = 0; $i < ceil($dataCount / $sqlLimit); $i++) {
+		for ($i = 1; $i <= $pageSize; $i++) {
 
-			// 临时文件名称
-			$temp_mark = $i + 1;
-			$temp_file_path = $filePath . '_' . $temp_mark . $suffix;
+			// 生成临时文件名称和路径
+			$temp_file_path = $dirPath.$fileName . '_' . $i . $suffix;
 
-			// 生成内容临时文件
-			$this->_csvWriteContent($temp_file_path, $where, $i, $sqlLimit);
+			// 获取要下载的数据
+			$dataList = array();
+			switch ($downloadType) {
+				case 'user':
+					// 获取用户列表
+					$UserModel = new commonModel\UserModel();
+					$dataList = $UserModel->getUserPageList($whereArr, $i, $pageCount);
+					break;
+			}
+			// 内容写入
+			$this->csvWriteContent($temp_file_path, $headArr, $dataList);
 
+			$csvFileArr[]=$temp_file_path;
 		}
 
 		// 合并所有临时文件
-		return $this->csvMerge($dirPath, $fileName, $suffix);
+		$this->csvMergeOnly($downFile, $csvFileArr);
 
-	}
+		// 异步处理，删除20分之前的垃圾文件
+		$this->csvRecycleBinDelete($dirPath);
 
-
-	/**
-	 * 临时文件写入数据
-	 * @param $filePath 文件路径（名称）
-	 * @param $p
-	 * @param $pageSize
-	 * @return int
-	 */
-	private function _csvWriteContent($filePath, $where, $p, $pageSize){
-//		$memberModel= new model\memberModel();
-//		$dataArr = $memberModel->memberPage($where, $p, $pageSize);
-
-		$dataArr = array(
-			array('name'=>'吴','sex'=>'男'),
-			array('name'=>'谢','sex'=>'女'),
-		);
-
-
-		if(empty($dataArr)){
-			return 0;
-		}
-
-		// 打开临时文件
-		$fp = fopen($filePath, 'w');
-
-		// 遍历数据写入文件中
-		foreach ($dataArr as $val) {
-
-//			$cnt++;
-//			if ($limit == $cnt) {
-			//刷新一下输出buffer，防止由于数据过多造成问题
-//				ob_flush();
-//					flush(); // 这个函数会影响下载
-//				$cnt = 0;
-//			}
-
-
-			// 编码转换
-			foreach ($val as $k => $v) {
-				if ($v) {
-					$val[$k] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v);
-				} else {
-					$val[$k] = $v;
-				}
-
-			}
-
-			// 数据写入临时文件中
-			fputcsv($fp, $val);
-		}
-
-		//每生成一个文件关闭
-		fclose($fp);
-
-		return 1;
+		return $downFile;
 	}
 
 	/**
-	 * 生成CSV文件标题
-	 * @param $filePath
-	 * @param $suffix
-	 * @return int
+	 * 生成CSV临时文件 - 标题
+	 * @param $csvFileHead
+	 * @param $headArr
 	 */
-	private function _csvWriteHead($filePath, $suffix){
-		$head = array(
-			'member_id'=>'账号ID',
-			'realname'=>'姓名',
-			'nickname'=>'微信昵称',
-			'mobile'=>'手机号',
-			'created_at'=>'注册时间',
-		);
-
+	private function csvWriteHead($csvFileHead, $headArr) {
+		$head = [];
 		//过滤编码
-		foreach ($head as $k => $v) {
+		foreach ($headArr as $k => $v) {
 			$head[$k] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v);
 		}
 
 		// 生成临时文件
-		$fp = fopen($filePath .'_0'. $suffix, 'w');
+		$fp = fopen($csvFileHead, 'w');
 		fputcsv($fp, $head);
 		//每生成一个文件关闭
 		fclose($fp);
-
-		return 1;
 	}
 
 	/**
-	 * 合并文件
-	 * @param $dirPath
-	 * @param $fileName
-	 * @param string $suffix
-	 * @return array
+	 * 生成CSV临时文件 - 内容
+	 * @param $filePath
+	 * @param $headArr
+	 * @param $dataList
 	 */
-	private function csvMerge($dirPath, $fileName, $suffix){
-		$res = array('status'=>'error','msg'=>'');
-		$filetime = array();
-		$filePathArr = array();
+	private function csvWriteContent($filePath, $headArr, $dataList) {
+		// 打开临时文件
+		$fp = fopen($filePath, 'w');
 
-		//这个是需要下载的文件
-		$newFilePath = rtrim($dirPath,'/').'/'.$fileName.$suffix;
+		// 遍历数据写入文件中
+		foreach ($dataList as $val) {
 
-		// 如果要下载的文件存在，则删除
-		if(is_file($newFilePath)){
-			unlink($newFilePath);
-		}
-
-		$beforeTime = date('Y-m-d H:i:s', strtotime('-600 seconds'));
-
-		// 打开待操作的文件夹句柄
-		$handle1 = opendir($dirPath);
-		// 提取需要合并的文件
-		while(($resVal = readdir($handle1)) !== false){
-
-			if($resVal != '.' && $resVal != '..'){
-
-				$filePath = rtrim($dirPath,'/').'/'.$resVal;
-				// 如果是文件，提出文件内容，写入目标文件
-				if(is_file($filePath)){
-
-					$file_time = date ( "Y-m-d H:i:s", filemtime ( $filePath ) );
-
-					// 删除当前之前下载文件
-					if($beforeTime >= $file_time){
-						unlink($filePath);
-						continue;
-					}
-
-					// 过滤不需要的文件
-					if(!strstr(basename($filePath), $fileName)){
-						continue;
-					}
-
-					// 获取文件最近修改日期
-					$filetime[] = $file_time;
-
-					// 获取需要合并的文件
-					$filePathArr[] = $filePath;
-
+			$newVal = [];
+			foreach ($headArr as $k=>$v) {
+				$value = isset($val[$k]) ? $val[$k] : "";
+				// 编码转换
+				if ($value) {
+					$newVal[$k] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $value);
+				} else {
+					$newVal[$k] = $val[$k];
 				}
-
 			}
 
-		}
-		//关闭句柄
-		@closedir ( $handle1 );
-
-		//按时间排序
-		array_multisort($filetime,SORT_DESC, SORT_STRING, $filePathArr);
-//dump($filePathArr);die;
-		if(empty($filePathArr)){
-			$res['msg']='没有需要合并的文件';
-			return $res;
+			// 数据写入临时文件中
+			fputcsv($fp, $newVal);
 		}
 
+		//每生成一个文件关闭
+		fclose($fp);
+		return;
+	}
+
+	/**
+	 * 所有临时csv文件合成一个
+	 * @param $downFile
+	 * @param $csvFileArr
+	 */
+	private function csvMergeOnly($downFile, $csvFileArr) {
 		// 临时文件合并成一个文件
-		foreach ($filePathArr as $value){
+		foreach ($csvFileArr as $value){
 
 			$handle2 = fopen($value,'r');
 
 			if($str = fread($handle2,filesize($value))){
 				fclose($handle2);
 
-				$handle3 = fopen($newFilePath,'a+');
+				$handle3 = fopen($downFile,'a+');
 				if(fwrite($handle3, $str)){
 					fwrite($handle3,"");
 					fclose($handle3);
@@ -282,17 +251,198 @@ class DownloadLogic
 			if(is_file($value)){
 				unlink($value);
 			}
+		}
+		return;
+	}
 
+	/**
+	 * 删除垃圾文件
+	 * @param $dirPath
+	 */
+	private function csvRecycleBinDelete($dirPath) {
+		$dateFormat = "YmdHis";
+		// 当前时间 -10 分钟
+		$beforeTime = date($dateFormat, strtotime('-10 minute'));
+
+		// 打开待操作的文件夹句柄
+		$handle1 = opendir($dirPath);
+		// 提取需要合并的文件
+		while(($resVal = readdir($handle1)) !== false){
+
+			if($resVal != '.' && $resVal != '..'){
+
+				$filePath = rtrim($dirPath,'/').'/'.$resVal;
+
+				// 如果是文件
+				if(is_file($filePath)){
+					// 获取当前文件创建时间
+					$file_time = date ( $dateFormat, filemtime ( $filePath ) );
+
+					// 删除当前之前下载文件
+					if($beforeTime >= $file_time){
+						unlink($filePath);
+						continue;
+					}
+				}
+			}
+		}
+		//关闭句柄
+		@closedir ( $handle1 );
+		return;
+	}
+
+
+	/**
+	 * xls 下载
+	 * @param $downloadType
+	 * @param $whereArr
+	 */
+	public function xlsDownloadBatch($downloadType, $whereArr) {
+		set_time_limit(0);
+
+		// 后缀
+		$suffix='.xlsx';
+
+		// 下载文件临时目录
+		$dirPath = RUNTIME_PATH . 'downloadTemp/';
+
+		//文件名称
+		$fileName = $downloadType.'_'.$this->millisecondTime().mt_rand(1000,9999);
+
+		// 下载文件
+		$downFile = $dirPath.$fileName.$suffix;
+
+		vendor("PHPExcel.PHPExcel");
+		$objPHPExcel = new \PHPExcel();
+		$objWrite = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+
+		// 每页条数
+		$pageSize = 1;
+		// 初始下载数据条数
+		$dataCount = 0;
+		// 标题
+		$headArr = [];
+
+		switch ($downloadType) {
+			case "user":
+				$headArr = $this->getUserDownHead();
+				$UserModel = new commonModel\UserModel();
+				$dataCount = $UserModel->getUserPageCount($whereArr);
+				break;
 		}
 
+		// 分多少页
+		$pageLimit = ceil($dataCount / $pageSize);
 
-		$res['status']='success';
-		$res['data'] = array(
-			'file_path'=>$dirPath.$fileName.$suffix,
-		);
+		$objPHPExcel->setActiveSheetIndex(0);
+		// 工作表名称
+		$objPHPExcel->getActiveSheet()->setTitle($downloadType .'_1');
 
-		return $res;
+		// 标题写入
+		$this->xlsWriteHead($objPHPExcel, $headArr);
 
+		$dataList = [];
+		// 行数，内容从第2行开始写入
+		$row = 2;
+		for ($p = 1; $p <= $pageLimit; $p++) {
+			switch ($downloadType) {
+				case "user":
+					$UserModel = new commonModel\UserModel();
+					$dataList = $UserModel->getUserPageList($whereArr, $p, $pageSize);
+					break;
+			}
+
+			// 写入内容
+			$this->xlsWriteContent($objPHPExcel, $headArr, $dataList, $row);
+			$row = $row + count($dataList);
+		}
+
+		// 保存
+		$objWrite->save($downFile);
+
+		$fileInfo = pathinfo($downFile);
+		header('Content-type: application/x-'.$fileInfo['extension']);
+		header('Content-Disposition: attachment; filename='.$fileInfo['basename']);
+		header('Content-Length: '.filesize($downFile));
+		readfile($downFile);
+		// 下载完成后，删除文件
+		unlink($downFile);
+		exit();
+	}
+
+	/**
+	 * xls 标题写入
+	 * @param $objPHPExcel
+	 * @param $headArr
+	 * @return mixed
+	 */
+	private function xlsWriteHead($objPHPExcel, $headArr) {
+		$row = "A";
+		foreach ($headArr as $key => $val) {
+			$rowTemp = $row . '1';
+
+			$objPHPExcel->getActiveSheet()->getStyle($rowTemp)->getFont()->setName('宋体')->setSize(14)->setBold(true);
+			$objPHPExcel->getActiveSheet()->setCellValue($rowTemp, $val);//第一行数据
+
+			$row++;
+		}
+		return $objPHPExcel;
+	}
+
+	/**
+	 * xls 内容写入
+	 * @param $objPHPExcel
+	 * @param $headArr
+	 * @param $dataList
+	 * @param $row - 行数
+	 */
+	private function xlsWriteContent($objPHPExcel, $headArr, $dataList, $row) {
+		foreach ($dataList as $val) {
+			$col = "A";
+			foreach ($headArr as $k => $v) {
+				$colTemp = $col . $row;
+
+				$value = isset($val[$k]) ? $val[$k] : "";
+
+				$objPHPExcel->getActiveSheet()->setCellValue($colTemp, $value);
+
+				$col++;
+			}
+			$row++;
+		}
+		return;
+	}
+
+	/**
+	 * xls 下载
+	 * @param $fileName
+	 * @param $headArr
+	 * @param $dataList
+	 */
+	public function xlsDownload($fileName, $headArr, $dataList) {
+		$suffix='.xlsx';
+		$time = date("YmdHis");
+		$fileName = empty($fileName) ? $time : $fileName."_".$time;
+		vendor("PHPExcel.PHPExcel");
+		$objPHPExcel = new \PHPExcel();
+		$objWrite = new \PHPExcel_Writer_Excel2007($objPHPExcel);
+
+		$this->xlsWriteHead($objPHPExcel, $headArr);
+
+		$this->xlsWriteContent($objPHPExcel, $headArr, $dataList, 2);
+
+		ob_end_clean();//清除缓冲区,避免乱码
+		header("Pragma: public");
+		header("Expires: 0");
+		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		header("Content-Type: application/force-download");
+		header("Content-Type: application/download");
+		header('Content-type: application/xlsx');
+		header('Content-Type: application/octet-stream');
+		header('Content-Disposition: attachment; filename='.$fileName.$suffix);
+//		header('Content-Length: '.filesize(''));
+		$objWrite->save('php://output');
+		return;
 	}
 
 
@@ -310,7 +460,6 @@ class DownloadLogic
 	public function xlsDownExcel($excelFileName, $tableHeader, $data, $workSheet = null, $limitPage = 10000)
 	{
 		set_time_limit(0);
-//		ini_set("memory_limit", "1024M");
 
 		vendor("PHPExcel.PHPExcel");
 		$objPHPExcel = new \PHPExcel();
@@ -455,218 +604,6 @@ class DownloadLogic
 		}
 
 		return $objPHPExcel;
-	}
-
-	/**
-	 * csv Excel文件下载 最多下载100000
-	 * @param $excelFileName
-	 * @param $tableHeader
-	 * @param $tableData
-	 * @return bool
-	 */
-	public function csvDownExcel($excelFileName, $tableHeader, $tableData) {
-
-		$suffix='.csv';
-
-		// 下载文件临时目录
-		$dirPath = RUNTIME_PATH . 'download/';
-
-		// 文件名称追加日期
-		$fileName = $excelFileName.'_'.date('Ymd').str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-
-		// 路径 + 文件名 + 后缀
-		$filePathName = $dirPath . $fileName . $suffix;
-
-		// 转化想要的格式
-		$headTitle = $this->handelHead($tableHeader);
-
-		$head = array();
-		//过滤编码
-		foreach ($headTitle as $v) {
-			$head[] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v['title']);
-		}
-
-		// 生成临时文件
-		$fp = fopen($filePathName, 'w');
-
-		// 写入标题
-		fputcsv($fp, $head);
-
-		// 从第二行开始写入数据
-		$w = 2;
-
-		// 数据遍历
-		foreach ($tableData as $key => $val) {
-
-			// 对应标题写入数据
-			foreach ($headTitle as $k => $v) {
-				$code = $v['code'];
-				$name = $val[$code];
-				if ($name) {
-					$val[$code] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $name);
-				} else {
-					$val[$code] = $name;
-				}
-
-			}
-
-			// 写入数据
-			fputcsv($fp, $val);
-
-			$w++;
-
-			// 删除已读取的数据
-			unset($tableData[$key]);
-		}
-
-		// 关闭文件
-		fclose($fp);
-
-		// 下载文件并删除原文件
-		$this->csvDownload($filePathName);
-		return true;
-	}
-
-
-	/**
-	 * csv Excel文件下载 循环下载
-	 * @param $excelFileName
-	 * @param $tableHeader
-	 * @param $tableDataType
-	 * @param $pageSize
-	 * @return bool
-	 */
-	public function csvDownExcelFor($excelFileName, $tableHeader, $tableDataType, $pageSize, $data = array()) {
-
-		$suffix='.csv';
-
-		// 下载文件临时目录
-		$dirPath = RUNTIME_PATH . 'download/';
-
-		// 文件名称追加日期
-		$fileName = $excelFileName.'_'.date('YmdHis').str_pad(mt_rand(1, 999), 3, '0', STR_PAD_LEFT);
-
-		// 路径 + 文件名 + 后缀
-		$filePathName = $dirPath . $fileName . $suffix;
-
-		// 转化想要的格式
-		$headTitle = $this->handelHead($tableHeader);
-
-		$head = array();
-		//过滤编码
-		foreach ($headTitle as $v) {
-			$head[] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $v['title']);
-		}
-
-		// 生成临时文件
-		$fp = fopen($filePathName, 'w');
-
-		// 写入标题
-		fputcsv($fp, $head);
-
-		// 写入数据
-		switch ($tableDataType) {
-			case 'user':
-				$this->writeDataUser($fp, $headTitle, $pageSize);
-
-			default:
-				// 最大数据下载限制
-				/*$count = count($data);
-				$maxCount = 200000;
-				if ($count > $maxCount) {
-					$count = $maxCount;
-				}
-
-				$pageSize = ceil($count / $pageSize);*/
-
-				// 从第二行开始写入数据
-				// 数据遍历
-				foreach ($data as $key => $val) {
-
-					// 对应标题写入数据
-					foreach ($headTitle as $k => $v) {
-						$code = $v['code'];
-						$name = $val[$code];
-						if ($name) {
-							$val[$code] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $name);
-						} else {
-							$val[$code] = $name;
-						}
-
-					}
-
-					// 写入数据
-					fputcsv($fp, $val);
-
-					// 删除已读取的数据
-					unset($data[$key]);
-				}
-				break;
-		}
-
-		// 关闭文件
-		fclose($fp);
-
-		// 下载文件并删除原文件
-		$this->csvDownload($filePathName);
-		return true;
-	}
-
-	/**
-	 * 遍历数据写入csv文件
-	 * @param $fp
-	 * @param $headTitle
-	 * @param $pageLimit
-	 * @return bool
-	 */
-	private function writeDataUser($fp, $headTitle, $pageLimit) {
-		$memberModel = new model\memberModel();
-		$where = array();
-
-		$count = $memberModel->memberCount($where);
-
-		// 最大数据下载限制
-		$maxCount = 200000;
-		if ($count > $maxCount) {
-			$count = $maxCount;
-		}
-
-		$pageSize = ceil($count / $pageLimit);
-
-		// 从第二行开始写入数据
-		$w = 2;
-		for ($i = 1; $i <= $pageSize; $i++) {
-
-			$page = $i;
-			$tableData = $memberModel->memberPage($where, $page, $pageLimit);
-
-			// 数据遍历
-			foreach ($tableData as $key => $val) {
-
-				// 对应标题写入数据
-				foreach ($headTitle as $k => $v) {
-					$code = $v['code'];
-					$name = $val[$code];
-					if ($name) {
-						$val[$code] = iconv('utf-8', 'gbk//TRANSLIT//IGNORE', $name);
-					} else {
-						$val[$code] = $name;
-					}
-
-				}
-
-				// 写入数据
-				fputcsv($fp, $val);
-
-				$w++;
-
-				// 删除已读取的数据
-				unset($tableData[$key]);
-			}
-		}
-
-		return true;
-
 	}
 
 	/**

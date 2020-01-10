@@ -10,13 +10,13 @@ use app\home\logic;
 use think\Loader;
 use think\Debug;
 use think\Controller;
+use app\home\factory;
 class TestController extends Controller
 {
 	public function index(){
-		$arr = [200293,200296,200299,200305,200307,200308,200310,200303,200304,191849,200153,196930,200321,199111,200320,199138,200322,200298,184814,199758,46468,200326,200329,190500,200330,200328,200203,200334,200142,49728,199301,200335,200306,200336,41878,200337,200339,200338,200340,200341,200295,200342,200344,196198,200346,200347,196997];
+		$xian = [];
+		dump(count($xian));
 
-//		$arr = array_unique($arr);
-		dump(count($arr));
 
 		die;
 		echo 'hello world';die;
@@ -116,6 +116,18 @@ dump($arrResponse);
     public function log() {
     	$TestLogic = new logic\TestLogic();
     	$TestLogic->logAdd();
+    }
+
+	/**
+	 * 工厂模式
+	 */
+    public function myFactory() {
+
+    	$user = factory\UserFactory::createUser();
+
+    	echo $user->getUser();
+
+    	die;
     }
 
 
