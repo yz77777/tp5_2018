@@ -33,6 +33,15 @@ class DownloadController extends Controller
 		$DownloadLogic->xlsDownload($fileName, $headArr, $dataList);
 	}
 
+	public function xlsRead() {
+		$filePath = ROOT_PATH."abc.xlsx";
+		$DownloadLogic = new logic\DownloadLogic();
+		$dataList = $DownloadLogic->xlsRead($filePath);
+
+//		dump($dataList);
+		dump(implode(",", $dataList));
+	}
+
 	/*public function xls() {
 
 		$DownloadLogic = new logic\DownloadLogic();

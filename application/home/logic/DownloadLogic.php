@@ -445,6 +445,48 @@ class DownloadLogic
 		return;
 	}
 
+	public function xlsRead($filePath) {
+		vendor("PHPExcel.PHPExcel");
+//		dump($filePath);die;
+		$fileInfo = pathinfo($filePath);
+
+		$extensionArr = array('xlsx');
+		if (!in_array($fileInfo['extension'], $extensionArr)) {
+			die("文件类型不支持");
+		}
+
+		$type = "Excel2007";
+
+		$objReader = \PHPExcel_IOFactory::createReader($type);
+		$objPHPExcel = $objReader->load($filePath);
+
+		$sheet = $objPHPExcel->getSheet(0);
+
+		// 返回列（字母）
+		$allColumn = $sheet->getHighestColumn();
+		// 返回行（数字）
+		$allRow = $sheet->getHighestRow();
+
+//		$phpexcel_shared_date = new \PHPExcel_Shared_Date();
+		$data = array();
+
+		for($colIndex = 1; $colIndex <= $allRow; $colIndex++){
+			for ($rowIndex = "A"; $rowIndex < $allColumn; $rowIndex++) {
+				$str = (string)$sheet->getCell($rowIndex.$colIndex)->getValue();
+
+//				if ($colIndex > 1 && in_array($rowIndex, array('G'))) {
+//					$str = $phpexcel_shared_date->ExcelToPHP($str,true,true);
+//				}
+
+//				$data[$colIndex][] = $str;
+				$data[] = $str;
+
+			}
+		}
+//		dump($data);
+		return $data;
+	}
+
 
 	/**
 	 * xls文件下载
