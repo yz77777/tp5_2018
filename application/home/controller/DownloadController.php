@@ -39,7 +39,36 @@ class DownloadController extends Controller
 		$dataList = $DownloadLogic->xlsRead($filePath);
 
 //		dump($dataList);
-		dump(implode(",", $dataList));
+
+		// 小数据直接分隔
+//		dump(implode(",", $dataList));
+
+		// 大数据分页
+		$pageLimit = 5000;
+		$pageSize = ceil(count($dataList) / $pageLimit);
+		dump(count($dataList));
+
+
+		for ($page = 1; $page <= $pageSize; $page++) {
+
+			$idArr = [];
+			$i = 1;
+			foreach ($dataList as $k=>$v) {
+				$idArr[]=$v;
+				unset($dataList[$k]);
+				if ($i == 5000) {
+					dump(implode(",", $idArr));
+					dump(count($idArr));
+					break;
+				}
+				$i++;
+			}
+			if ($page == $pageSize) {
+				dump(implode(",", $idArr));
+				dump(count($idArr));
+			}
+		}
+
 	}
 
 	/*public function xls() {
