@@ -2,8 +2,6 @@
 namespace app\home\controller;
 use think\Controller;
 use app\home\logic;
-use think\Loader;
-use think\Debug;
 class DownloadController extends Controller
 {
 	public function index()
