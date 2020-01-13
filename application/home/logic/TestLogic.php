@@ -6,6 +6,7 @@
  * Time: 下午2:38
  */
 namespace app\home\logic;
+use app\commonModel;
 class TestLogic {
 
 	public function logAdd() {
@@ -124,5 +125,23 @@ class TestLogic {
 			$group[$tempUniqueKeyStr]=$value;
 		}
 		return $group;
+	}
+
+	public function insertUser() {
+		$UserModel = new commonModel\UserModel();
+
+		$dataList = [];
+
+		for ($i = 1; $i <= 10; $i++) {
+			$dataList[] = array(
+				'user_name' => 'AA_'.$i,
+				'phone' => mt_rand(10000000000, 99999999999),
+				'create_time' => date('Y-m-d H:i:s'),
+				'update_time' => date('Y-m-d H:i:s')
+			);
+		}
+
+		$a = $UserModel->addUserAll($dataList);
+		dump($a);
 	}
 }

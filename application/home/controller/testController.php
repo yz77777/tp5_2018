@@ -130,6 +130,12 @@ dump($arrResponse);
     	die;
     }
 
+    public function insertUser() {
+
+    	$TestLogic = new logic\TestLogic();
+	    $TestLogic->insertUser();
+    }
+
 
 
 

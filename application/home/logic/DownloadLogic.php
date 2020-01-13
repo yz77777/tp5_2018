@@ -64,6 +64,7 @@ class DownloadLogic
 	 * csv文件批量下载方法
 	 * @param $downloadType
 	 * @param $whereArr
+	 * @throws \PHPExcel_Writer_Exception
 	 */
 	public function csvDownloadBatch($downloadType, $whereArr) {
 
@@ -89,6 +90,7 @@ class DownloadLogic
 	 * @param $downloadType
 	 * @param $whereArr
 	 * @return string 下载文件地址
+	 * @throws \PHPExcel_Writer_Exception
 	 */
 	private function csvDownWrite($downloadType, $whereArr)
 	{
@@ -102,7 +104,7 @@ class DownloadLogic
 		$dirPath = RUNTIME_PATH . 'downloadTemp/';
 
 		//文件名称
-		$fileName = $downloadType.'_'.$this->millisecondTime().mt_rand(1000,9999);
+		$fileName = $this->getFileName($downloadType);
 
 		// 下载文件
 		$downFile = $dirPath.$fileName.$suffix;
@@ -291,83 +293,13 @@ class DownloadLogic
 		return;
 	}
 
-
 	/**
-	 * xls 下载
-	 * @param $downloadType
-	 * @param $whereArr
+	 * 获取文件名称
+	 * @param $downloadType - 下载数据类型
+	 * @return string 返回文件名称
 	 */
-	public function xlsDownloadBatch($downloadType, $whereArr) {
-		set_time_limit(0);
-
-		// 后缀
-		$suffix='.xlsx';
-
-		// 下载文件临时目录
-		$dirPath = RUNTIME_PATH . 'downloadTemp/';
-
-		//文件名称
-		$fileName = $downloadType.'_'.$this->millisecondTime().mt_rand(1000,9999);
-
-		// 下载文件
-		$downFile = $dirPath.$fileName.$suffix;
-
-		vendor("PHPExcel.PHPExcel");
-		$objPHPExcel = new \PHPExcel();
-		$objWrite = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-
-		// 每页条数
-		$pageSize = 1;
-		// 初始下载数据条数
-		$dataCount = 0;
-		// 标题
-		$headArr = [];
-
-		switch ($downloadType) {
-			case "user":
-				$headArr = $this->getUserDownHead();
-				$UserModel = new commonModel\UserModel();
-				$dataCount = $UserModel->getUserPageCount($whereArr);
-				break;
-		}
-
-		// 分多少页
-		$pageLimit = ceil($dataCount / $pageSize);
-
-		$objPHPExcel->setActiveSheetIndex(0);
-		// 工作表名称
-		$objPHPExcel->getActiveSheet()->setTitle($downloadType .'_1');
-
-		// 标题写入
-		$this->xlsWriteHead($objPHPExcel, $headArr);
-
-		$dataList = [];
-		// 行数，内容从第2行开始写入
-		$row = 2;
-		for ($p = 1; $p <= $pageLimit; $p++) {
-			switch ($downloadType) {
-				case "user":
-					$UserModel = new commonModel\UserModel();
-					$dataList = $UserModel->getUserPageList($whereArr, $p, $pageSize);
-					break;
-			}
-
-			// 写入内容
-			$this->xlsWriteContent($objPHPExcel, $headArr, $dataList, $row);
-			$row = $row + count($dataList);
-		}
-
-		// 保存
-		$objWrite->save($downFile);
-
-		$fileInfo = pathinfo($downFile);
-		header('Content-type: application/x-'.$fileInfo['extension']);
-		header('Content-Disposition: attachment; filename='.$fileInfo['basename']);
-		header('Content-Length: '.filesize($downFile));
-		readfile($downFile);
-		// 下载完成后，删除文件
-		unlink($downFile);
-		exit();
+	private function getFileName($downloadType) {
+		return $downloadType.'_'.$this->millisecondTime().mt_rand(1000,9999);
 	}
 
 	/**
@@ -378,11 +310,16 @@ class DownloadLogic
 	 */
 	private function xlsWriteHead($objPHPExcel, $headArr) {
 		$row = "A";
-		foreach ($headArr as $key => $val) {
+		foreach ($headArr as $val) {
 			$rowTemp = $row . '1';
 
 			$objPHPExcel->getActiveSheet()->getStyle($rowTemp)->getFont()->setName('宋体')->setSize(14)->setBold(true);
-			$objPHPExcel->getActiveSheet()->setCellValue($rowTemp, $val);//第一行数据
+			$objPHPExcel->getActiveSheet()->setCellValue($rowTemp, $val['name']);//第一行数据
+
+			$width = isset($val['width']) ? $val['width'] : "";
+			if ($width) {
+				$objPHPExcel->getActiveSheet()->getColumnDimension($row)->setWidth($width);
+			}
 
 			$row++;
 		}
@@ -418,12 +355,14 @@ class DownloadLogic
 	 * @param $fileName
 	 * @param $headArr
 	 * @param $dataList
+	 * @throws \PHPExcel_Writer_Exception
 	 */
 	public function xlsDownload($fileName, $headArr, $dataList) {
 		$suffix='.xlsx';
 		$time = date("YmdHis");
 		$fileName = empty($fileName) ? $time : $fileName."_".$time;
 		vendor("PHPExcel.PHPExcel");
+
 		$objPHPExcel = new \PHPExcel();
 		$objWrite = new \PHPExcel_Writer_Excel2007($objPHPExcel);
 
@@ -445,6 +384,12 @@ class DownloadLogic
 		return;
 	}
 
+	/**
+	 * 读取Excel文件
+	 * @param $filePath
+	 * @return array
+	 * @throws \PHPExcel_Reader_Exception
+	 */
 	public function xlsRead($filePath) {
 		vendor("PHPExcel.PHPExcel");
 //		dump($filePath);die;
@@ -485,281 +430,5 @@ class DownloadLogic
 		}
 //		dump($data);
 		return $data;
-	}
-
-
-	/**
-	 * xls文件下载
-	 * @param $excelFileName    文件名
-	 * @param $tableHeader      array( array('title'=>'姓名','title_code'=>'name','width'=>20), array('title'=>'姓名','title_code'=>'name') ) || array('name'=>'姓名','sex'=>'性别')
-	 * @param $data             array( array('name'=>'吴','sex'=>'男'), array('name'=>'谢','sex'=>'女') )
-	 * @param string $workSheet 工作表名称
-	 * @param int $limitPage    工作表最大条数数据
-	 * @return bool
-	 * @throws \PHPExcel_Exception
-	 * @throws \PHPExcel_Writer_Exception
-	 */
-	public function xlsDownExcel($excelFileName, $tableHeader, $data, $workSheet = null, $limitPage = 10000)
-	{
-		set_time_limit(0);
-
-		vendor("PHPExcel.PHPExcel");
-		$objPHPExcel = new \PHPExcel();
-
-		if (!is_array($data)) {
-			$data = array();
-		}
-		if (!is_array($tableHeader)) {
-			$tableHeader = array();
-		}
-
-		if (empty($workSheet)) {
-			$workSheet = '工作表';
-		}
-
-		$headTitle = $this->handelHead($tableHeader);
-
-		$countPage = ceil(count($data)/$limitPage); // 分多少页
-
-		// 写入第一页数据
-		$objPHPExcel->setActiveSheetIndex(0);
-		$objPHPExcel->getActiveSheet()->setTitle($workSheet .'1'); // 工作表名称
-		$objPHPExcel = $this->handleTableTitle($objPHPExcel, $headTitle);
-		$objPHPExcel = $this->handleTableData($objPHPExcel, $headTitle, $data, $limitPage);
-
-		// 从第二页数据开始写入
-		for ($i = 2; $i <= $countPage; $i++) {
-			// 设置worksheet名称
-			$objPHPExcelWorksheet = new \PHPExcel_Worksheet($objPHPExcel, $workSheet.$i);
-			$objPHPExcel->addSheet($objPHPExcelWorksheet);
-			// 切换到当前页
-			$objPHPExcel->setActiveSheetIndex($i-1);
-
-			// 生成当前页标题
-			$objPHPExcel = $this->handleTableTitle($objPHPExcel, $headTitle);
-			// 生成当前页数据
-			$objPHPExcel = $this->handleTableData($objPHPExcel, $headTitle, $data, $limitPage);
-		}
-
-		// 销毁data
-		unset($data);
-
-		// 切换到第一页
-		$objPHPExcel->setActiveSheetIndex(0);
-
-		$ondate = date('YmdHis');
-		$filename = "{$excelFileName}_{$ondate}.xlsx";
-		$write = new \PHPExcel_Writer_Excel2007($objPHPExcel);
-		ob_end_clean();//清除缓冲区,避免乱码
-
-		header("Pragma: public");
-		header("Expires: 0");
-		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-		header("Content-Type: application/force-download");
-		header("Content-Type: application/download");
-		header('Content-type: application/xlsx');
-		header('Content-Type: application/octet-stream');
-		header('Content-Disposition: attachment; filename='.$filename);
-//	header('Content-Length: '.filesize(''));
-		$write->save('php://output');
-		return true;
-	}
-
-	private function handelHead($tableHeader) {
-		//表头数组
-		$headTitle = array();
-		$k = 'A';
-		foreach ($tableHeader as $key=>$value) {
-			// 判断是一维数组还是二维数组
-			if (is_array($value)) {
-				$headTitle[$k] = array(
-					'title'=>$value['title'],
-					'code'=>$value['title_code'],  // 对应数据key
-					'width'=>isset($value['width'])?$value['width']:'',
-				);
-			} else {
-				$headTitle[$k] = array(
-					'title'=>$value,
-					'code'=>$key, // 对应数据key
-				);
-			}
-
-			$k++;
-		}
-		return $headTitle;
-	}
-
-	/**
-	 * 处理标题
-	 * @param $objPHPExcel
-	 * @param $headTitle
-	 * @return mixed
-	 */
-	private function handleTableTitle($objPHPExcel, $headTitle) {
-		foreach ($headTitle as $key => $value) {
-			$t_key = $key . '1';
-
-			$width = isset($value['width'])?$value['width']:'';
-			if ($width) {
-				$objPHPExcel->getActiveSheet()->getColumnDimension($key)->setWidth($width);
-			}
-
-			$objPHPExcel->getActiveSheet()->getStyle($t_key)->getFont()->setName('宋体')->setSize(14)->setBold(true);
-			$objPHPExcel->getActiveSheet()->setCellValue($t_key, $value['title']);//第一行数据
-
-		}
-		return $objPHPExcel;
-	}
-
-	/**
-	 * 处理数据
-	 * @param $objPHPExcel
-	 * @param $headTitle
-	 * @param $data
-	 * @param $limitPage
-	 * @return mixed
-	 */
-	private function handleTableData($objPHPExcel, $headTitle, &$data, $limitPage) {
-		$w = 2; // 从第二行开始写入数据
-		$mark = 1; // 标记循环次数
-
-		foreach ($data as $key => $val) {
-
-			// 超过当前页最大条数据限制，则跳出循环
-			if ($mark > $limitPage) {
-
-				break;
-			}
-
-			// 对应标题写入数据
-			foreach ($headTitle as $k => $v) {
-				$code = $v['code'];
-				$objPHPExcel->getActiveSheet()->setCellValue($k . $w, $val[$code]);//第$k列 第$j行
-
-			}
-			$w++;
-
-			// 删除已读取的数据
-			unset($data[$key]);
-
-			$mark++;
-		}
-
-		return $objPHPExcel;
-	}
-
-	/**
-	 * 读取excel
-	 * @param $file
-	 * @return array
-	 * @throws \PHPExcel_Exception
-	 * @throws \PHPExcel_Reader_Exception
-	 */
-	public function readyFile($file) {
-		Loader::import("PHPExcel", EXTEND_PATH."PHPExcel");
-
-		if (!file_exists($file)) {
-			die("文件不存在");
-		}
-
-		$fileInfo = pathinfo($file);
-
-		$extensionArr = array('xlsx');
-		if (!in_array($fileInfo['extension'], $extensionArr)) {
-			die("文件类型不支持");
-		}
-
-		$type = "Excel2007";
-
-		$objReader = \PHPExcel_IOFactory::createReader($type);
-		$objPHPExcel = $objReader->load($file);
-
-		$sheet = $objPHPExcel->getSheet(0);
-
-		// 返回列（字母）
-		$allColumn = $sheet->getHighestColumn();
-		// 返回行（数字）
-		$allRow = $sheet->getHighestRow();
-
-		/*
-		$ColumnNum = \PHPExcel_Cell::columnIndexFromString($allColumn);     // 列号 转 列数
-		for($rowIndex=2;$rowIndex<=$allRow;$rowIndex++){        //循环读取每个单元格的内容。注意行从1开始，列从A开始
-			for($colIndex=0;$colIndex<=$ColumnNum;$colIndex++){
-				$str = (string)$sheet->getCellByColumnAndRow($colIndex, $rowIndex)->getValue();
-				$data[$rowIndex][] = $str;
-			}
-		}*/
-
-		$phpexcel_shared_date = new \PHPExcel_Shared_Date();
-		$data = array();
-
-		for($colIndex=1;$colIndex<=$allRow;$colIndex++){
-			for ($rowIndex = "A"; $rowIndex <= $allColumn; $rowIndex++) {
-				$str = (string)$sheet->getCell($rowIndex.$colIndex)->getValue();
-
-				if ($colIndex > 1 && in_array($rowIndex, array('G'))) {
-					$str = $phpexcel_shared_date->ExcelToPHP($str,true,true);
-				}
-
-				$data[$colIndex][] = $str;
-			}
-		}
-		return $data;
-	}
-
-	/**
-	 * 解析Crm拜访目的
-	 * @throws \PHPExcel_Exception
-	 * @throws \PHPExcel_Reader_Exception
-	 */
-	public function crmHandl() {
-		$file = ROOT_PATH."visit.xlsx";
-
-		$list = $this->readyFile($file);
-
-
-		$headerTitle = array(
-			'visit_id'          => '拜访ID',
-			'hotel_id'          => '酒店ID',
-			'hotel_name'        => '酒店名称',
-			'hotel_star'        => '酒店星级',
-			'office_name'       => '办事处',
-			'visit_mm'          => 'MM',
-			'visit_time'        => '拜访时间',
-			'visit_purpose_1'   => '拜访目的',
-			'visit_purpose_2'   => '拜访目的二级',
-			'visit_state'       => '拜访状态',
-			'visit_content'     => '拜访内容',
-		);
-		$data = array();
-
-		foreach ($list as $key => $value) {
-			if ($key == 1) {
-				continue;
-			}
-
-			// 目的数据处理
-			$zktLogic = new ZKTLogic();
-			$visit_purpose_2 = $zktLogic->getVisitExpectLowerLevel($value[8]);
-			$visit_purpose_1 = $zktLogic->getVisitPurposeOne($value[7]);
-			$visit_state = $zktLogic->active_status_opt($value[9]);
-
-			$data[]=array(
-				'visit_id'          => $value[0],
-				'hotel_id'          => $value[1],
-				'hotel_name'        => $value[2],
-				'hotel_star'        => $value[3],
-				'office_name'       => $value[4],
-				'visit_mm'          => $value[5],
-				'visit_time'        => date('Y-m-d',$value[6]),
-				'visit_purpose_1'   => $visit_purpose_1,
-				'visit_purpose_2'   => $visit_purpose_2,
-				'visit_state'       => $visit_state,
-				'visit_content'     => $value[10],
-			);
-		}
-//		dump($data);
-//		die;
-		$this->csvDownExcelFor("crm-酒店跟进记录", $headerTitle, "",'30',$data);
 	}
 }

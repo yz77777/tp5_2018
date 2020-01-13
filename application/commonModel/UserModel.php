@@ -39,4 +39,8 @@ class UserModel extends Model {
 	public function getUserPageList($where, $page, $pageCount) {
 		return $this->where($where)->page($page, $pageCount)->select()->toArray();
 	}
+
+	public function addUserAll($dataList) {
+		return $this->saveAll($dataList)->toArray();
+	}
 }
