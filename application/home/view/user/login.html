@@ -1,0 +1,38 @@
+{include file="public/header" title="$title" /}
+<div>
+	<form id="loginForm" action="#">
+		<ul>
+			<li>账号：<input type="text"></li>
+			<li>密码：<input type="password"></li>
+			<li><input type="submit"></li>
+		</ul>
+	</form>
+
+</div>
+{include file="public/footer" /}
+<script type="text/javascript">
+$(document).ready(function () {
+	$('#loginForm').submit(function () {
+
+		return false;
+	});
+	function login() {
+		$.ajax({
+			type: "POST",//方法类型
+			dataType: "json",//预期服务器返回的数据类型
+			url: "/users/login" ,//url
+			data: $('#loginForm').serialize(),
+			success: function (result) {
+				console.log(result);//打印服务端返回的数据(调试用)
+				if (result.code == 200) {
+					alert("SUCCESS");
+				}
+				;
+			},
+			error : function() {
+				alert("异常！");
+			}
+		});
+	}
+});
+</script>
