@@ -7,9 +7,21 @@
  */
 
 namespace app\api\logic;
-
+use app\commonModel\UserModel;
 
 class UserLogic
 {
+	public function login($param) {
+		$email = $param['email'];
+		$pwd = $param['pwd'];
 
+
+		$UserModel = new UserModel();
+		$userInfo = $UserModel->findUserWhere($email);
+
+		if ($userInfo) {
+
+		}
+		return true;
+	}
 }

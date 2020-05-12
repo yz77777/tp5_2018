@@ -43,4 +43,18 @@ class UserModel extends Model {
 	public function addUserAll($dataList) {
 		return $this->saveAll($dataList)->toArray();
 	}
+
+	public function findUserWhere($email = '', $qq = '') {
+		$where = [];
+		if ($email) {
+			$where['email'] = $email;
+		} else if ($qq) {
+			$where['qq'] = $qq;
+		} else {
+			return [];
+		}
+		$user = $this->where($where)->find()->toArray();
+//echo $this->getLastSql();
+		return $user;
+	}
 }

@@ -9,7 +9,20 @@
 namespace app\api\controller;
 
 
-class CommonController
-{
+use think\Controller;
 
+class CommonController extends Controller
+{
+//	public function __construct() {}
+
+
+
+	protected function responseSuccess($data=null) {
+		$res = ['code'=>'200', 'message'=>'成功', 'data'=>$data];
+		return $res;
+	}
+	protected function responseFail($code = '10000', $message = '', $data=[]) {
+		$res = ['code'=>$code, 'message'=>$message, 'data'=>$data];
+		return $res;
+	}
 }

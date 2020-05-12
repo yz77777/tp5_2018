@@ -7,9 +7,9 @@
  */
 namespace app\home\controller;
 use think\Controller;
-class LoginController extends Controller
+class UserController extends Controller
 {
-	public function index() {
+	public function login() {
 
 		return view();
 	}

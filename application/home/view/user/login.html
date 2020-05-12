@@ -2,8 +2,8 @@
 <div>
 	<form id="loginForm" action="#">
 		<ul>
-			<li>账号：<input type="text"></li>
-			<li>密码：<input type="password"></li>
+			<li>账号：<input type="text" name="userName"></li>
+			<li>密码：<input type="password" name="pwd"></li>
 			<li><input type="submit"></li>
 		</ul>
 	</form>
@@ -13,24 +13,28 @@
 <script type="text/javascript">
 $(document).ready(function () {
 	$('#loginForm').submit(function () {
-
+		$param = $('#loginForm').serialize();
+		login($param);
 		return false;
 	});
-	function login() {
+	function login($param) {
 		$.ajax({
 			type: "POST",//方法类型
 			dataType: "json",//预期服务器返回的数据类型
-			url: "/users/login" ,//url
-			data: $('#loginForm').serialize(),
+			url: "/user/login" ,//url
+			data: $param,
 			success: function (result) {
 				console.log(result);//打印服务端返回的数据(调试用)
-				if (result.code == 200) {
+				if (String(result.code) === "0") {
 					alert("SUCCESS");
 				}
 				;
 			},
-			error : function() {
-				alert("异常！");
+			error : function(XMLHttpRequest, textStatus, errorThrown) {
+				// console.log(XMLHttpRequest);
+				// console.log(textStatus);
+				// console.log(errorThrown);
+				alert(errorThrown);
 			}
 		});
 	}

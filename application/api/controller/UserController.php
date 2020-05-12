@@ -7,9 +7,21 @@
  */
 
 namespace app\api\controller;
+use think\Request;
+use app\api\logic\UserLogic;
 
-
-class UserController
+class UserController extends CommonController
 {
+	/**
+	 * @return array
+	 */
+	public function login() {
+		$request = Request::instance();
+		$paramPost = $request->post();
 
+		$UserLogic = new UserLogic();
+		$res = $UserLogic->login($paramPost);
+
+		return $this->responseSuccess($res);
+	}
 }
