@@ -7,9 +7,13 @@
  */
 namespace app\home\controller;
 use think\Controller;
+use think\Hook;
+
 class UserController extends Controller
 {
 	public function login() {
+
+
 
 		return view();
 	}

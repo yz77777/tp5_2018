@@ -29,7 +29,7 @@ return [
     // 默认模块名
     'default_module'         => 'home',
     // 禁止访问模块
-    'deny_module_list'       => ['common'],
+    'deny_module_list'       => [],
     // 默认控制器名
     'default_controller'     => 'Index',
     // 默认操作名
@@ -45,9 +45,15 @@ return [
     // 自动搜索控制器
     'controller_auto_search' => false,
 
+	'LOAD_EXT_FILE' =>'common',
+
 //	'exception_tmpl'         => APP_PATH . DS . 'error.tpl',
 //	'exception_tmpl'         => THINK_PATH . '..' . DS . 'error.tpl',
 //	'error_message'          => '哇，页面错误了！请稍后再试～',
+	// 显示错误信息
+	'show_error_msg'         => true,
+	// 异常处理handle类 留空使用 \think\exception\Handle
+	'exception_handle'       => 'app\common\exception\HandleBase',
 
 
 	'template'               => [
