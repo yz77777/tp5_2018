@@ -14,7 +14,8 @@
 // 定义应用目录
 define('APP_PATH', __DIR__ . '/../application/');
 define('CONF_PATH', __DIR__. '/../application/config/');
-if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest') {
+$requestPost = isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) === 'post';
+if ($requestPost) {
 	define('BIND_MODULE','api');
 } else {
 	define('BIND_MODULE','home');
