@@ -3,8 +3,9 @@ namespace app\home\controller;
 use app\home\logic;
 use think\Loader;
 use think\Debug;
-use think\Controller;
-class IndexController extends Controller
+use think\Session;
+
+class IndexController extends BaseController
 {
     /*public function index()
     {
@@ -12,7 +13,7 @@ class IndexController extends Controller
     }*/
     public function index()
 	{
-
+//		Session::clear("user");
 		return view();
 	}
 

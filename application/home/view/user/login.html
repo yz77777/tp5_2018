@@ -25,10 +25,12 @@ $(document).ready(function () {
 			data: $param,
 			success: function (result) {
 				console.log(result);//打印服务端返回的数据(调试用)
-				if (String(result.code) === "0") {
-					alert("SUCCESS");
+				if (String(result.code) === "200") {
+					window.location.href='/';
+				} else {
+					alert(result.message);
 				}
-				;
+
 			},
 			error : function(XMLHttpRequest, textStatus, errorThrown) {
 				// console.log(XMLHttpRequest);
