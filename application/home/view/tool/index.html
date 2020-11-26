@@ -1,0 +1,88 @@
+{extend name="public/base" /}
+
+{block name="title"}大漠孤颜值{/block}
+
+
+{block name="left"}{/block}
+
+{block name="main"}
+<style>
+	#main ul li {float: left; margin-left: 15px;}
+	textarea,button{padding: 10px;}
+	#main .button p{margin: 5px;}
+</style>
+<div id="main">
+
+	<div class="top10">
+		<div class="float-left">
+			<textarea name="request" cols="30" rows="10"></textarea>
+		</div>
+		<div class="float-left button" style="text-align: center; margin: 0 10px; align-content: center;">
+			<p><button tag="hump">驼峰</button></p>
+			<p><button tag="underline">下划线</button></p>
+			<p><button tag="md5">md5</button></p>
+			<p><button tag="copy">复制</button></p>
+		</div>
+		<div class="float-left">
+			<textarea name="result" cols="30" rows="10"></textarea>
+		</div>
+	</div>
+
+</div>
+<script type="application/javascript" src="__JS__/jquery-md5.js"></script>
+<script>
+	$(function($) {
+		const main = $('#main');
+		main.click(function (event) {
+			const ele = event.target;
+			const valueText = main.find('textarea[name=request]').val();
+			switch (ele.getAttribute('tag')) {
+				case 'copy':
+					getWordCopyRequest();
+					break;
+				case 'hump':
+					getWordHumpRequest(valueText);
+					break;
+				case 'underline':
+					getWordUnderlineRequest(valueText);
+					break;
+				case 'md5':
+					getWordMd5Request(valueText);
+					break;
+			}
+		});
+
+		function getWordMd5Request(valueText) {
+			setWordResult($.md5(valueText));
+		}
+		function getWordHumpRequest(valueText) {
+			valueText = valueText.replace(/\_(\w)/g, function(all, letter){
+				return letter.toUpperCase();
+			});
+			setWordResult(valueText);
+		}
+		function getWordUnderlineRequest(valueText) {
+			valueText = valueText.replace(/([A-Z])/g,"_$1").toLowerCase();
+			setWordResult(valueText);
+		}
+
+		function getWordCopyRequest() {
+			const result = main.find('textarea[name=result]');
+			if (result && result.length < 1) {
+				return;
+			}
+			result.select();
+			document.execCommand("copy");
+		}
+
+		function setWordResult(valueText) {
+			main.find('textarea[name=result]').val(valueText);
+		}
+		function getWordResult() {
+			return main.find('textarea[name=result]').val();
+		}
+	});
+</script>
+{/block}
+
+{block name="footer"}{/block}

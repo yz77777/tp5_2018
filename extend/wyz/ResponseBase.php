@@ -16,7 +16,7 @@ class ResponseBase
 
 		$res = ['code'=>$code, 'message'=>$message];
 
-		echo json_encode($res);
+		echo json_encode($res, JSON_UNESCAPED_UNICODE);
 		die;
 	}
 }

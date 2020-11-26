@@ -25,11 +25,8 @@ class BaseController extends Controller
 	 * 登陆信息有效期处理
 	 */
 	private function loginExpire() {
-		$sessionName = 'user';
-		if (Session::has($sessionName)) {
-			$userInfo = Session::get($sessionName);
-			Session::flash($sessionName, $userInfo);
-		}
+//		$sessionName = 'user';
+//		dump($_SESSION['user']);
 	}
 
 }
