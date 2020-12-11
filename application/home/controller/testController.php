@@ -12,58 +12,27 @@ use think\Controller;
 use app\home\factory;
 use app\home\interfaces;
 use app\home\logic\TestLogic;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
+use PhpAmqpLib\Message\AMQPMessage;
 class TestController extends Controller
 {
 
-
-	function userTextEncode($str){
-		if(!is_string($str)) return $str;
-		if(!$str || $str=='undefined') return '';
-
-		$text = json_encode($str); //暴露出unicode
-		$text = preg_replace_callback("/(\\\u[2def][0-9a-f]{3})/i",function($str){
-			return addslashes($str[0]);
-		},$text); //将emoji的unicode留下，其他不动，这里的正则比原答案增加了d，因为我发现我很多emoji实际上是\ud开头的，反而暂时没发现有\ue开头。
-		return json_decode($text);
-	}
-	function userTextDecode($str){
-		$text = json_encode($str); //暴露出unicode
-		$text = preg_replace_callback('/\\\\\\\\/i',function($str){
-			return '\\';
-		},$text); //将两条斜杠变成一条，其他不动
-		return json_decode($text);
-	}
 	public function index(){
 
 		$str='{{ ཨ་ཁུ་སྟོན་པ }}';
-//
-		$card_amount = 0.5;
-		$order_amount = 1.59;
-		$first_frozen_amount = 0.3;
-		$sum_frozen_amount = 0.2;
-
-
-		$card_frozen_amount = round(bcdiv(bcmul($card_amount, $first_frozen_amount, 5), $order_amount, 3), 2);
-
-		$card_frozen_amount = bccomp($card_frozen_amount, 0, 2) < 0 ? 0 : $card_frozen_amount;
-
-		if (bccomp(bcadd($sum_frozen_amount, $card_frozen_amount, 2), $first_frozen_amount, 2) > 0) {
-			$card_frozen_amount = bcsub($first_frozen_amount, $sum_frozen_amount, 2);
-		}
-
-
-
-		$start = strtotime('-1 days');
-//24小时前
-		$expired_date = date('Y-m-d H:i:s', $start);
-//		application_log('info', '查询时间范围=' . $expired_date);
-
-		dump($expired_date);
-
-
-//dump($this->userTextEncode($str));
-//dump($this->userTextDecode($str));
-
+//		require_once __DIR__ . '/vendor/autoload.php';
+//		// 建立AMQP连接
+//		$connection = new AMQPStreamConnection('localhost', 8080, 'guest', 'guest');
+//		$channel    = $connection->channel();
+//		// 定义队列名称
+//		$channel->queue_declare('hello', false, false, false, false);
+//		// 定义要发送的信息
+//		$msg = new AMQPMessage('Hello World!'.time());
+//		// 发送消息
+//		$channel->basic_publish($msg, '', 'hello');
+//		echo " [x] Sent 'Hello World!'\n";
+//		$channel->close();
+//		$connection->close();
 
 
 die;
