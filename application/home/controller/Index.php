@@ -1,6 +1,7 @@
 <?php
 namespace app\home\controller;
 use app\home\logic;
+use think\Exception;
 use think\Loader;
 use think\Debug;
 use think\Controller;
@@ -12,7 +13,14 @@ class Index extends Controller
     }*/
     public function index()
 	{
-		echo 7777;die;
+		try {
+			echo 7777;
+		} catch (Exception $e) {
+
+		}
+		throw new Exception("错误处理");
+
+		die;
 		//$IndexLogic = new logic\IndexLogic();
 		//$res = $IndexLogic->login();
 

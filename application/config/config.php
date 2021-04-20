@@ -15,7 +15,7 @@ return [
     // +----------------------------------------------------------------------
 
     // 应用调试模式
-    'app_debug'              => true,
+    'app_debug'              => false,
     // 应用Trace
     'app_trace'              => true,
 
@@ -42,6 +42,10 @@ return [
     'controller_auto_search' => false,
 
 
+	// 异常处理handle类 留空使用 \think\exception\Handle
+	'exception_handle'       => '\\app\\common\\exception\\Http',
+	// 异常页面的模板文件
+	'exception_tmpl'         => '\\app\\home\\view\\exception\\exception.tpl',
 
 
 ];
