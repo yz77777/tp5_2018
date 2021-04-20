@@ -136,10 +136,23 @@ class Common
 	 * @param array $list
 	 * @param string $key 排序字段key
 	 * @param string $sort
+	 * @return array
 	 */
-	public static function array_sort(array &$list, string $key, string $sort='asc') {
+	public static function array_sort(array $list, string $key, $sort='asc') {
 		$sortKeyList = array_column($list, $key);
 		$sortKey = strtolower($sort) == 'asc' ? SORT_ASC : SORT_DESC;
 		array_multisort($sortKeyList, $sortKey,  $list);
+		return $list;
+	}
+
+	/**
+	 * 字符串过滤
+	 * @param String $str
+	 * @return string
+	 */
+	public static function filterString(String $str) {
+		$str = trim($str);
+		$str = htmlspecialchars($str);
+		return $str;
 	}
 }
