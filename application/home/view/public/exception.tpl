@@ -340,10 +340,10 @@ return implode(', ', $result);
                     // Show Function
                     if($value['function']){
                         echo sprintf(
-                            'at %s%s%s(%s)',
+                            'at %s%s%s(%s)', 
                             isset($value['class']) ? parse_class($value['class']) : '',
-                            isset($value['type'])  ? $value['type'] : '',
-                            $value['function'],
+                            isset($value['type'])  ? $value['type'] : '', 
+                            $value['function'], 
                             isset($value['args'])?parse_args($value['args']):''
                         );
                     }
@@ -381,9 +381,9 @@ return implode(', ', $result);
             <td><?php echo htmlentities($key); ?></td>
             <td>
                 <?php
-                            if(is_array($val) || is_object($val)){
+                            if(is_array($val) || is_object($val)){ 
                                 echo htmlentities(json_encode($val, JSON_PRETTY_PRINT));
-                            } else if(is_bool($val)) {
+                            } else if(is_bool($val)) { 
                                 echo $val ? 'true' : 'false';
                             } else if(is_scalar($val)) {
                                 echo htmlentities($val);
@@ -418,10 +418,10 @@ return implode(', ', $result);
             <div class="clearfix">
                 <div class="col-md-3"><strong><?php echo htmlentities($key); ?></strong></div>
                 <div class="col-md-9"><small>
-                        <?php
-                            if(is_array($val) || is_object($val)){
+                        <?php 
+                            if(is_array($val) || is_object($val)){ 
                                 echo htmlentities(json_encode($val, JSON_PRETTY_PRINT));
-                            } else if(is_bool($val)) {
+                            } else if(is_bool($val)) { 
                                 echo $val ? 'true' : 'false';
                             } else if(is_scalar($val)) {
                                 echo htmlentities($val);
@@ -439,11 +439,11 @@ return implode(', ', $result);
 </div>
 <?php } ?>
 
-{*<div class="copyright">*}
-{*    <a title="官方网站" href="http://www.thinkphp.cn">ThinkPHP</a>*}
-{*    <span>V<?php echo THINK_VERSION; ?></span>*}
-{*    <span>{ 十年磨一剑-为API开发设计的高性能框架 }</span>*}
-{*</div>*}
+<div class="copyright">
+    <a title="官方网站" href="http://www.thinkphp.cn">ThinkPHP</a>
+    <span>V<?php echo THINK_VERSION; ?></span>
+    <span>{ 十年磨一剑-为API开发设计的高性能框架 }</span>
+</div>
 <?php if(\think\App::$debug) { ?>
 <script>
 	var LINE = <?php echo $line; ?>;

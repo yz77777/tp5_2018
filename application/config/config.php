@@ -15,7 +15,7 @@ return [
     // +----------------------------------------------------------------------
 
     // 应用调试模式
-    'app_debug'              => false,
+    'app_debug'              => true,
     // 应用Trace
     'app_trace'              => true,
 
@@ -43,9 +43,21 @@ return [
 
 
 	// 异常处理handle类 留空使用 \think\exception\Handle
-	'exception_handle'       => '\\app\\common\\exception\\Http',
+	'exception_handle'       => '\app\common\exception\JsonException',
 	// 异常页面的模板文件
-	'exception_tmpl'         => '\\app\\home\\view\\exception\\exception.tpl',
+	'exception_tmpl'         => APP_PATH .'home'. DS .'view'. DS .'public'. DS .'exception.tpl',
+	// 错误显示信息,非调试模式有效
+	'error_message'          => '页面错误！请稍后再试～',
+	// 显示错误信息
+	'show_error_msg'         => false,
 
+	// +----------------------------------------------------------------------
+	// | url设置
+	// +----------------------------------------------------------------------
+
+	// URL伪静态后缀
+	'url_html_suffix'        => 'html',
+	// 是否开启路由
+//	'url_route_on'           => false,
 
 ];
