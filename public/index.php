@@ -14,12 +14,14 @@
 // 定义应用目录
 define('APP_PATH', __DIR__ . '/../application/');
 define('CONF_PATH', __DIR__. '/../application/config/');
+//$requestPost = isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) === 'post';
 $requestPost = isset($_SERVER['REQUEST_METHOD']) && strtolower($_SERVER['REQUEST_METHOD']) === 'post';
-if ($requestPost) {
-	define('BIND_MODULE','api');
-} else {
-	define('BIND_MODULE','home');
-}
+//if ($requestPost) {
+//	define('BIND_MODULE','api');
+//} else {
+//	define('BIND_MODULE','home');
+//}
+define('BIND_MODULE','home');
 
 // 加载框架引导文件
 require __DIR__ . '/../thinkphp/start.php';

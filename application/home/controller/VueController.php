@@ -14,4 +14,14 @@ class VueController extends Controller {
 
 		return view();
 	}
+
+	public function userInfoView() {
+
+		return view();
+	}
+
+	public function form($type) {
+
+		return view('form-'.$type);
+	}
 }

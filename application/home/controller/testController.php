@@ -14,70 +14,31 @@ use app\home\interfaces;
 use app\home\logic\TestLogic;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
+use think\Exception;
+
 class TestController extends Controller
 {
 
-	public function index(){
-
-		$str='{{ ཨ་ཁུ་སྟོན་པ }}';
-//		require_once __DIR__ . '/vendor/autoload.php';
-//		// 建立AMQP连接
-//		$connection = new AMQPStreamConnection('localhost', 8080, 'guest', 'guest');
-//		$channel    = $connection->channel();
-//		// 定义队列名称
-//		$channel->queue_declare('hello', false, false, false, false);
-//		// 定义要发送的信息
-//		$msg = new AMQPMessage('Hello World!'.time());
-//		// 发送消息
-//		$channel->basic_publish($msg, '', 'hello');
-//		echo " [x] Sent 'Hello World!'\n";
-//		$channel->close();
-//		$connection->close();
 
 
-die;
+	public function index() {
+		$start_time = microtime(true);
+		$time_cost = (microtime(true) - $start_time) * 1000;
+		dump($start_time);
+		dump($time_cost);
 
-//		$today =time();   //当前时间戳 6月7号
-//		$end_time = '2020-08-08 00:00:00';  //一般由数据库查询出来的活动结束时间
-//		$second = strtotime($end_time)-$today; //结束时间戳减去当前时间戳
-//		// echo $second;
-//		$day = floor($second/3600/24);    //倒计时还有多少天
-//		$hr = floor($second/3600%24);     //倒计时还有多少小时（%取余数）
-//		$min = floor($second/60%60);      //倒计时还有多少分钟
-//		$sec = floor($second%60);         //倒计时还有多少秒
-//		$str = $day."天".$hr."小时".$min."分钟".$sec."秒";  //组合成字符串
-//
-//		dump($second);
-//		dump($str);
-
-//		die;
-
-
-		$f=array(
-			'31536000'=>'年',
-			'2592000'=>'个月',
-			'604800'=>'星期',
-			'86400'=>'天',
-			'3600'=>'小时',
-			'60'=>'分钟',
-			'1'=>'秒'
-		);
-		foreach ($f as $k=>$v){
-			if (0 !=$c=floor($t/(int)$k)) {
-				dump($c.$v);
-				return;
-			}
+		$url = "appid=1234";
+		if (!preg_match('/appid=[^&]+/', $url)) {
+//			$url .= '&appid='.($app_id ? $app_id : $wx_app_id);
+			dump(1);
 		}
 
-		die;
 
-//		$this->bdUrlAPI(1, 'http://u6.gg');
-//		echo '<br/><br/>----------百度短网址API----------<br/><br/>';
-//
-//		echo 'Long to Short: '.bdUrlAPI(1, 'http://u6.gg').'<br/>';
-//
-//		echo 'Short to Long: '.bdUrlAPI(0, 'http://360app.ft12.com').'<br/><br/>';
+
+		die;
 	}
+
+
 
 
 	public function redis() {
@@ -110,6 +71,7 @@ die;
 	    }
 
 	    else
+
 
 	    {
 	    	$baseurl = 'http://dwz.cn/query.php';
@@ -258,6 +220,11 @@ dump($arrResponse);
     	$TestLogic = new TestLogic();
 	    $orderNo = $TestLogic->getUUID();
 	    dump($orderNo);
+    }
+
+    public function filterFun() {
+
+    	die;
     }
 
 

@@ -1,0 +1,28 @@
+{extend name="public/base" /}
+
+{block name="title"}大漠孤颜值{/block}
+
+
+{block name="left"}{/block}
+
+{block name="main"}
+
+<div>
+	<form id="userForm" action="">
+		姓名：<input type="text" name="name">
+		年龄：<input type="text" name="age">
+		邮箱：<input type="text" name="email">
+		Bool：<input type="text" name="is_bool">
+		<input type="submit">
+	</form>
+</div>
+
+<script type="application/javascript">
+	var demo = new Vue({
+
+	});
+</script>
+{/block}
+
+
+{block name="footer"}{/block}

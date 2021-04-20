@@ -1,0 +1,55 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<title>{block name="title"}标题{/block}</title>
+	<link rel="stylesheet" href="__CSS__/css-1.min.css?t=1" data-react-helmet=true />
+	<script src="https://unpkg.com/vue/dist/vue.js"></script>
+	<!-- 引入样式 -->
+	<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+	<!-- 引入组件库 -->
+	<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	<script src="https://unpkg.com/element-ui@2.14.1/lib/index.js"></script>
+	{css href="/static/css/home.css" /}
+	{block name="css"}{/block}
+
+</head>
+<body>
+{block name="top"}
+	<div id="top">
+		<div class="top-main">
+			<div class="top-main-right">
+				{if condition="session('user')"}
+					{:session('user.user_name')}
+				{else /}
+					<a href="{:url('/user/login')}">登陆</a>
+					<a href="javascript:void(0);">注册</a>
+					<a href=""><img src="/static/image/qq/icon_qq_16.png" alt="QQ登陆"></a>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/block}
+{block name="logo"}
+	<div id="logo">
+		<div class="logo-left">
+			LOGIN
+		</div>
+		<div class="logo-right">
+			ADV
+		</div>
+	</div>
+{/block}
+{block name="menu"}
+	<div id="menu">
+		<ul>
+			<li><a href="/">首页</a></li>
+			<li><a href="{:url('/list/js')}">JS代码</a></li>
+			<li><a href="{:url('/list/php')}">PHP代码</a></li>
+			<li><a href="{:url('/list/mysql')}">MySQL</a></li>
+			<li><a href="{:url('/list/linux')}">Linux</a></li>
+		</ul>
+	</div>
+{/block}
+{block name="left"}左边分栏{/block}
+{block name="main"}主内容{/block}
+{block name="include"}{include file="public/footer" /}{/block}
