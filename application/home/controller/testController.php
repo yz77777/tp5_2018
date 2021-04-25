@@ -22,19 +22,10 @@ class TestController extends Controller
 
 
 	public function index() {
-		$start_time = microtime(true);
-		$time_cost = (microtime(true) - $start_time) * 1000;
-		dump($start_time);
-		dump($time_cost);
-
-		$url = "appid=1234";
-		if (!preg_match('/appid=[^&]+/', $url)) {
-//			$url .= '&appid='.($app_id ? $app_id : $wx_app_id);
-			dump(1);
-		}
 
 
 
+//		dump($hotel_id);
 		die;
 	}
 
