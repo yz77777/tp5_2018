@@ -8,6 +8,10 @@
 namespace app\home\controller;
 use app\common\Common;
 use app\home\logic;
+use app\home\service\impl\LoginServiceImpl;
+use app\home\service\LoginService;
+use think\cache\Driver;
+use think\cache\driver\Redis;
 use think\Controller;
 use app\home\factory;
 use app\home\interfaces;
@@ -15,6 +19,7 @@ use app\home\logic\TestLogic;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use think\Exception;
+use wyz\RedisLock;
 
 class TestController extends Controller
 {
@@ -24,8 +29,13 @@ class TestController extends Controller
 	public function index() {
 
 
+		$arr = ['0000-00-00','2021-03-02', '2021-04-01'];
 
+//		dump(min($arr));
+//		dump(max($arr));
 //		dump($hotel_id);
+
+		dump(trim(''));
 		die;
 	}
 
@@ -33,13 +43,42 @@ class TestController extends Controller
 
 
 	public function redis() {
-		//实例化redis对象
-		$redis = new redis();
-		//连接redis,第一个参数是redis服务的IP127.0.0.1是自己的,6379是端口号
-		$redis->connect('127.0.0.1', 6379);
-		echo "Server is running: " . $redis->ping();
-
+		$key = "text_lock";
+		$redisLock = new RedisLock();
+		try {
+			if ($redisLock->lock($key, 30, 1)) {
+				dump('成功');
+			} else {
+				dump('处理中，请稍候再试');
+			}
+		} finally {
+			$redisLock->releaseLock($key);
+		}
 		die;
+	}
+
+	/**
+	 * 锁
+	 * @param string $key
+	 * @param int $expire 过期时间（秒）
+	 * @param int $sleepMillis 沉睡时间（秒）
+	 * @return bool
+	 */
+	private function lock($key, $expire, $sleepMillis) {
+		$redis = new Redis();
+
+		$handler = $redis->handler();
+		$result = $handler->set($key, true, ['nx', 'ex'=>$expire]);
+
+		for ($startTime = time(); !$result && time() - $startTime < $expire; $result = $handler->set($key, true, ['nx', 'ex'=>$expire])) {
+
+			try {
+				sleep($sleepMillis);
+			} catch (\Exception $e) {
+				return false;
+			}
+		}
+		return $result;
 	}
 
 	  /**
@@ -215,7 +254,21 @@ dump($arrResponse);
 
     public function filterFun() {
 
+//    	$Driver = new Driver();
+
+    	Driver::has('1');
+
+
     	die;
+    }
+
+    public function userLogin() {
+    	$loginService = new LoginServiceImpl();
+	    $result = $loginService->userLogin('', '');
+
+	    dump($result);
+
+	    die;
     }
 
 
