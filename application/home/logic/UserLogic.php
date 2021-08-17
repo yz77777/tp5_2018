@@ -6,8 +6,6 @@ namespace app\home\logic;
 
 use app\common\exception\BusinessException;
 use app\home\model\UserModel;
-use think\Exception;
-use think\exception\ValidateException;
 
 class UserLogic
 {
