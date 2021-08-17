@@ -10,6 +10,7 @@ use app\common\Common;
 use app\home\logic;
 use app\home\service\impl\LoginServiceImpl;
 use app\home\service\LoginService;
+use think\Cache;
 use think\cache\Driver;
 use think\cache\driver\Redis;
 use think\Controller;
@@ -28,17 +29,55 @@ class TestController extends Controller
 
 	public function index() {
 
+		$a = 100; // 本金
+		$b = 15; // 赠金
 
-		$arr = ['0000-00-00','2021-03-02', '2021-04-01'];
+		$c = 21; // 限额
 
-//		dump(min($arr));
-//		dump(max($arr));
-//		dump($hotel_id);
+		// 本金占总金额比例
+//		$rale = round($a / ($a + $b), 6);
+		$rale = bcdiv($a , bcadd($a, $b, 2), 10);
 
-		dump(trim(''));
-		die;
+		$split_order_number = ceil(($a + $b) / $c);
+		dump("本金：". $a  . " 赠金：" . $b . " 本订单拆分数量：" . $split_order_number . " 本金占总金额比例：" . $rale);
+
+
+		for ($i = 1; $i <= $split_order_number; $i++) {
+			$this->split($a, $b, $c, $rale);
+		}
+
 	}
 
+	private function split(&$deposit_amount, &$gift_amount, $limit_amount, $rale) {
+
+		$t_deposit_amount = bcmul($limit_amount, $rale, 2);
+		$t_gift_amount = bcsub($limit_amount, $t_deposit_amount, 2);
+
+		if (bccomp(bcadd($deposit_amount, $gift_amount, 2), $limit_amount, 2) <= 0) {
+			$t_deposit_amount = $deposit_amount;
+			$t_gift_amount = $gift_amount;
+		}
+
+		// 剩余金额
+		$deposit_amount = bcsub($deposit_amount, $t_deposit_amount, 2);
+		$gift_amount = bcsub($gift_amount, $t_gift_amount, 2);
+
+		dump("拆本金：" . $t_deposit_amount . ' 拆赠金：'. $t_gift_amount . ' 总金额：'. bcadd($t_deposit_amount, $t_gift_amount, 2)
+			. ' 剩余本金：'. $deposit_amount . ' 剩余赠金：' . $gift_amount . ' 剩余总金额：' . bcadd($deposit_amount, $gift_amount, 2));
+	}
+
+
+	public function async() {
+
+//		$server = new \Swoole\Server(string $host, int $port = 0, int $mode = SWOOLE_PROCESS, int $sockType = SWOOLE_SOCK_TCP);
+//		$serv = new Swoole\Server('127.0.0.1', 9501);
+
+		$host = '0.0.0.0';
+		$port = 9501;
+		$serv = new swoole_server($host,$port) ;
+
+		exit;
+	}
 
 
 

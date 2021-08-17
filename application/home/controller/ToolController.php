@@ -39,4 +39,8 @@ class ToolController
 		die;
 	}
 
+	public function splitOrder() {
+		return view();
+	}
+
 }

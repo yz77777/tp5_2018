@@ -1,0 +1,56 @@
+{extend name="public/base" /}
+
+{block name="title"}大漠孤颜值{/block}
+
+
+{block name="left"}{/block}
+
+{block name="main"}
+<style>
+	#main ul li {height: 40px; border-color: red;}
+	#main ul li label{ display: inline-block; width: 10%; text-align: right;}
+	.errorFromTip {border-color: darkred;}
+</style>
+<div id="main">
+	<form action="">
+		<ul>
+			<li>
+				<label>限制金额：</label>
+				<input type="text" name="limitAmount" data-check="notEmpty" min="1" max="100000">
+			</li>
+			<li>
+				<label>本金：</label>
+				<input type="text" name="depositAmount" min="0">
+			</li>
+			<li>
+				<label>赠金：</label>
+				<input type="text" name="giftAmount" min="0">
+			</li>
+			<li>
+				<label></label>
+				<input type="submit" data-check="notVerify" >
+			</li>
+		</ul>
+	</form>
+</div>
+
+<script type="application/javascript" src="__JS__/verifyForm.js"></script>
+<script type="application/javascript">
+	$(function () {
+		$("form").submit(function () {
+
+			try {
+				if ($("form").verifyForm()) {
+
+				}
+			} catch (e) {
+				console.error(e);
+			}
+			return false;
+		});
+	});
+</script>
+{/block}
+
+{block name="footer"}
+{/block}
