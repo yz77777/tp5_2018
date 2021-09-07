@@ -11,6 +11,7 @@ namespace app\common\exception;
 
 
 use Exception;
+use think\Config;
 use think\exception\ErrorException;
 use think\exception\Handle;
 use think\exception\HttpException;
@@ -41,7 +42,7 @@ class JsonException extends Handle
 	{
 		if (!$this->isIgnoreReport($exception)) {
 			// 收集异常数据
-			if (Container::get('app')->isDebug()) {
+			if (Config::get('app_debug')) {
 				$data = [
 					'file' => $exception->getFile(),
 					'line' => $exception->getLine(),
@@ -57,11 +58,11 @@ class JsonException extends Handle
 				$log = "[{$data['code']}]{$data['message']}";
 			}
 
-			if (Container::get('app')->config('log.record_trace')) {
+			if (Config::get('record_trace')) {
 				$log .= "\r\n" . $exception->getTraceAsString();
 			}
 
-			Container::get('log')->record($log, 'error');
+//			Config::get('log')->record($log, 'error');
 		}
 	}
 
@@ -107,7 +108,7 @@ class JsonException extends Handle
 	 */
 	public function renderForConsole(Output $output, Exception $e)
 	{
-		if (Container::get('app')->isDebug()) {
+		if (Config::get("app_debug")) {
 			$output->setVerbosity(Output::VERBOSITY_DEBUG);
 		}
 
@@ -229,16 +230,18 @@ class JsonException extends Handle
 			return $message;
 		}
 
-		$lang = Container::get('lang');
+		$lang = Config::get('lang');
 
-		if (strpos($message, ':')) {
-			$name = strstr($message, ':', true);
-			$message = $lang->has($name) ? $lang->get($name) . strstr($message, ':') : $message;
-		} elseif (strpos($message, ',')) {
-			$name = strstr($message, ',', true);
-			$message = $lang->has($name) ? $lang->get($name) . ':' . substr(strstr($message, ','), 1) : $message;
-		} elseif ($lang->has($message)) {
-			$message = $lang->get($message);
+		if ($lang != null) {
+			if (strpos($message, ':')) {
+				$name = strstr($message, ':', true);
+				$message = $lang->has($name) ? $lang->get($name) . strstr($message, ':') : $message;
+			} elseif (strpos($message, ',')) {
+				$name = strstr($message, ',', true);
+				$message = $lang->has($name) ? $lang->get($name) . ':' . substr(strstr($message, ','), 1) : $message;
+			} elseif ($lang->has($message)) {
+				$message = $lang->get($message);
+			}
 		}
 
 		return $message;
