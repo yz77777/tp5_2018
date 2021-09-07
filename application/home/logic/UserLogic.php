@@ -13,7 +13,7 @@ class UserLogic
 	public function getUserInfo() {
 		$UserModel = new UserModel();
 
-		$userInfo = $UserModel->findUser(['mobile' => '13439771795']);
+		$userInfo = $UserModel->findUser(['mobile' => '17610470000']);
 
 
 		return $userInfo;
