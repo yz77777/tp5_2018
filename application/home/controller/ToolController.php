@@ -43,4 +43,11 @@ class ToolController
 		return view();
 	}
 
+	/**
+	 * 计算器
+	 */
+	public function calculator() {
+		return view();
+	}
+
 }

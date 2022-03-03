@@ -414,21 +414,20 @@ class DownloadLogic
 
 //		$phpexcel_shared_date = new \PHPExcel_Shared_Date();
 		$data = array();
-
+//var_dump($allColumn);die;
 		for($colIndex = 1; $colIndex <= $allRow; $colIndex++){
-			for ($rowIndex = "A"; $rowIndex < $allColumn; $rowIndex++) {
+			for ($rowIndex = "A"; $rowIndex <= $allColumn; $rowIndex++) {
 				$str = (string)$sheet->getCell($rowIndex.$colIndex)->getValue();
 
 //				if ($colIndex > 1 && in_array($rowIndex, array('G'))) {
 //					$str = $phpexcel_shared_date->ExcelToPHP($str,true,true);
 //				}
 
-//				$data[$colIndex][] = $str;
-				$data[] = $str;
+				$data[$colIndex][] = $str;
 
 			}
 		}
-//		dump($data);
+//		dump($data);die;
 		return $data;
 	}
 }

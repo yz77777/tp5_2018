@@ -1,0 +1,42 @@
+{extend name="public/base" /}
+
+{block name="title"}大漠孤颜值{/block}
+
+
+{block name="left"}{/block}
+
+{block name="main"}
+<style>
+	#main form p { margin-top: 15px;}
+	#main form p button {padding: 10px 70px; font-size: 18px;}
+	#main form p input {padding: 10px }
+</style>
+<div id="main" class="">
+	<form action="">
+		<p tag="num_1"><span>数字1</span><input type="text" name="num_1" /></p>
+		<p tag="result"></p>
+		<p><button name="equal">=</button> <button name="add">+</button> <button name="subtract">-</button> <button name="multiply">*</button> <button name="divide">/</button></p>
+	</form>
+</div>
+<script>
+	$(function($) {
+
+		const eleForm = $('#main form');
+		$('#main form p button').click(function () {
+			const name = $(this).attr('name');
+			const num = (eleForm.children('p[tag^=num_]').length) + 1;
+			switch (name) {
+				case 'add':
+					eleForm.children('p[tag=result]').before('<p tag="num_'+ num +'"><span>数字1</span><input type="text" name="num_'+ num +'" /></p>')
+					break
+
+			}
+			return false;
+		});
+	});
+</script>
+
+{/block}
+
+{block name="footer"}{/block}
+
