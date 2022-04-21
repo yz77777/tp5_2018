@@ -9,41 +9,9 @@ class IndexController extends BaseController
 {
     public function index()
 	{
-
-
-
-
 		return view();
 	}
 
-	public function test() {
-
-    	// 本金余额 * 消费金额 / 余额
-
-		$hotel_id_list = [143969];
-
-//		array_push($hotel_id_list, 2);
-//		dump($hotel_id_list);
-		$p = [];
-		$p[] = [
-			'ticket_category_id' => 0
-		];
-		$p[] = [
-			'ticket_category_id' => 1
-		];
-		$p[] = [
-			'ticket_category_id' => 1
-		];
-		$p[] = [
-			'ticket_category_id' => 2
-		];
-		$productsCateList = array_values(array_filter(array_unique(array_column($p, 'ticket_category_id'))));
-		dump($productsCateList);
-		if ($productsCateList == 1) {
-			dump(33333);
-		}
-		die;
-	}
 
 	function sec2Time($time)
 	{
