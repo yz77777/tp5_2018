@@ -6,8 +6,15 @@
  * Time: 上午11:07
  */
 namespace app\home\logic;
-use app\commonModel\model\ModuleModel;
+
+use app\model\UserModel;
 
 class UserLogic {
+
+	public function findUser($userId) {
+		$userModel = new UserModel();
+		$userInfo = $userModel->findAdmin($userId);
+		dump($userInfo);
+	}
 
 }

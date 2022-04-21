@@ -5,13 +5,13 @@
  * Date: 2019/10/12
  * Time: 下午3:43
  */
-namespace app\commonModel;
+namespace app\model;
 use think\Exception;
 use think\model;
 
 class UserModel extends Model {
 
-	protected $table = 'yz_user';
+	protected $table = 'user';
 
 	/**
 	 * 查询用户
