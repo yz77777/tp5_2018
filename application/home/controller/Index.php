@@ -12,7 +12,7 @@ class Index extends Controller
 		$userInfo = $UserLogic->getUserInfo();
 		// 测试代码
 		dump($userInfo['nickname']);
-		// 测试2
+		// 测试2222
 		return view();
 	}
 
