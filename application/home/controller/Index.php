@@ -10,7 +10,9 @@ class Index extends Controller
 	{
 		$UserLogic = new logic\UserLogic();
 		$userInfo = $UserLogic->getUserInfo();
+		// 测试代码
 		dump($userInfo['nickname']);
+		// 测试2
 		return view();
 	}
 
